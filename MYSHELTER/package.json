@@ -1,0 +1,21 @@
+{
+  "name": "myshelter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MYSHELTER — a Liquid Glass styled room, PG and hostel finder for students. Static HTML/CSS/JS, no backend.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/serve.js",
+    "build": "node scripts/build.js",
+    "preview": "node scripts/serve.js dist",
+    "test": "node --test \"tests/unit/*.test.js\"",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}
