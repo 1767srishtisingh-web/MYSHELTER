@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MYSHELTER — Student Rooms, PGs &amp; Hostels</title>
+  <meta name="description" content="Find student rooms, PGs, hostels and flats near campus. Filter by room type, amenities and budget, then book in minutes.">
+  <meta name="theme-color" content="#ece6df">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="home">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <header class="site-header wrap">
+    <nav class="nav glass glow" aria-label="Main">
+      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><defs><linearGradient id="bm1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ad98fb"/><stop offset="1" stop-color="#6b4cec"/></linearGradient><linearGradient id="bm2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8ecdf"/><stop offset="1" stop-color="#56c7b1"/></linearGradient></defs><path d="M5 15.5 16 6l11 9.5V26a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" fill="url(#bm1)"/><path d="M12.5 28v-7a3.5 3.5 0 0 1 7 0v7z" fill="url(#bm2)"/></svg>
+        </span>
+        <span>MYSHELTER<small>Rooms · PGs · Hostels</small></span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html" aria-current="page">Explore</a>
+        <a class="nav-link" href="bookings.html"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-panel glass glow">
+        <div>
+          <span class="eyebrow"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Verified student stays</span>
+          <h1 id="hero-title">Find your <span class="grad">shelter</span> near campus.</h1>
+          <p class="lede">Rooms, PGs, hostels and flats across India. Compare rent, deposit and amenities, then book in under two minutes.</p>
+          <div class="hero-stats" aria-label="At a glance">
+            <div class="stat"><strong data-stat="rooms">18</strong><span>listed stays</span></div>
+            <div class="stat"><strong data-stat="cities">8</strong><span>cities</span></div>
+            <div class="stat"><strong data-stat="from">₹6,000</strong><span>rent from</span></div>
+          </div>
+        </div>
+
+        <div class="search-card tinted glass">
+          <div class="search-card-head">
+            <span class="app-tile" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><defs><linearGradient id="at1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ad98fb"/><stop offset="1" stop-color="#6b4cec"/></linearGradient><linearGradient id="at2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8ecdf"/><stop offset="1" stop-color="#56c7b1"/></linearGradient></defs><path d="M6 24V10a4 4 0 0 1 4-4h4v18z" fill="url(#at1)"/><path d="M15 26V13a4 4 0 0 1 4-4h3a4 4 0 0 1 4 4v13z" fill="url(#at2)"/></svg>
+            </span>
+            <div class="titles">
+              <h2>Where are you studying?</h2>
+              <p>Search by city, area or college.</p>
+            </div>
+          </div>
+          <form class="search-form" id="search-form" role="search" novalidate>
+            <label class="sr-only" for="q">Search by city, area or college</label>
+            <div class="input-pill search-bar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="q" name="q" type="search" placeholder="City, area or college" autocomplete="off" maxlength="80" enterkeyhint="search">
+              <button class="icon-btn icon-btn--violet" type="submit" aria-label="Search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-3.5-3.5"/></svg>
+              </button>
+            </div>
+          </form>
+          <div class="city-chips" id="city-chips" aria-label="Popular cities"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="filters wrap" aria-label="Filters">
+      <div class="filters-panel glass">
+        <div class="filters-row">
+          <div class="filter-group grow">
+            <span class="filter-label" id="type-label">Room type</span>
+            <div class="segmented" role="group" aria-labelledby="type-label" id="type-filter">
+              <button type="button" data-type="all" aria-pressed="true">All</button>
+              <button type="button" data-type="1 BHK" aria-pressed="false">1 BHK</button>
+              <button type="button" data-type="2 BHK" aria-pressed="false">2 BHK</button>
+              <button type="button" data-type="Single Room" aria-pressed="false">Single Room</button>
+              <button type="button" data-type="Shared Room" aria-pressed="false">Shared Room</button>
+            </div>
+          </div>
+          <label class="input-pill select-pill sort-pill">
+            <span class="sr-only">Sort rooms</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>
+            <select id="sort">
+              <option value="recommended">Recommended</option>
+              <option value="rent-asc">Rent: Low to High</option>
+              <option value="rent-desc">Rent: High to Low</option>
+              <option value="rating">Top rated</option>
+            </select>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </label>
+        </div>
+        <div class="filters-row">
+          <div class="filter-group">
+            <span class="filter-label" id="gender-label">Stay for</span>
+            <div class="segmented" role="group" aria-labelledby="gender-label" id="gender-filter">
+              <button type="button" data-gender="any" aria-pressed="true">Anyone</button>
+              <button type="button" data-gender="Girls" aria-pressed="false">Girls only</button>
+              <button type="button" data-gender="Boys" aria-pressed="false">Boys only</button>
+            </div>
+          </div>
+          <div class="filter-group" role="group" aria-labelledby="amenity-label" id="amenity-filter">
+            <span class="filter-label" id="amenity-label">Amenities</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="results wrap" aria-labelledby="results-title">
+      <div class="results-head">
+        <div>
+          <h2 id="results-title">Available stays</h2>
+          <p id="results-count" aria-live="polite">Loading rooms…</p>
+        </div>
+        <button class="btn btn--ghost btn--sm" type="button" id="clear-filters" hidden>Clear all filters</button>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-inner glass">
+      <span>© <span data-year>2026</span> MYSHELTER · Built for student stays</span>
+      <nav aria-label="Footer">
+        <a href="index.html">Explore</a>
+        <a href="bookings.html">My bookings</a>
+      </nav>
+    </div>
+  </footer>
+
+  <noscript><div class="wrap"><p class="notice">MYSHELTER needs JavaScript enabled to search and book rooms.</p></div></noscript>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/store.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/home.js" defer></script>
+</body>
+</html>

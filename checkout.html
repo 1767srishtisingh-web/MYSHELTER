@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Checkout — MYSHELTER</title>
+  <meta name="description" content="Confirm your MYSHELTER booking: review rent, deposit and discount, then book your stay.">
+  <meta name="theme-color" content="#ece6df">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="checkout">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <header class="site-header wrap">
+    <nav class="nav glass glow" aria-label="Main">
+      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><defs><linearGradient id="bm1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ad98fb"/><stop offset="1" stop-color="#6b4cec"/></linearGradient><linearGradient id="bm2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8ecdf"/><stop offset="1" stop-color="#56c7b1"/></linearGradient></defs><path d="M5 15.5 16 6l11 9.5V26a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" fill="url(#bm1)"/><path d="M12.5 28v-7a3.5 3.5 0 0 1 7 0v7z" fill="url(#bm2)"/></svg>
+        </span>
+        <span>MYSHELTER<small>Rooms · PGs · Hostels</small></span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Explore</a>
+        <a class="nav-link" href="bookings.html"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="page-head wrap">
+      <p class="crumbs"><a href="index.html">Explore</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span aria-current="page">Checkout</span></p>
+      <h1>Confirm your stay</h1>
+      <p>Review the bill, add your details and you’re done.</p>
+    </div>
+
+    <section class="checkout wrap" id="checkout-section">
+      <!-- Shown when no room is selected or the id is unknown -->
+      <div class="empty glass" id="no-room" hidden>
+        <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
+        <h2 id="no-room-title">No room selected</h2>
+        <p id="no-room-text">Pick a stay from Explore and tap “Book now” to start checkout.</p>
+        <div class="actions"><a class="btn btn--violet" href="index.html">Browse rooms</a></div>
+      </div>
+
+      <div class="checkout-grid" id="checkout-grid" hidden>
+        <form class="panel glass glass--strong" id="booking-form" novalidate aria-labelledby="form-title">
+          <h2 id="form-title">Your details</h2>
+          <p class="sub">We’ll share these with the owner to confirm your move-in.</p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="label" for="name">Full name</label>
+              <div class="input-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                <input id="name" name="name" type="text" autocomplete="name" maxlength="60" required aria-describedby="name-error" placeholder="e.g. Ananya Sharma">
+              </div>
+              <p class="field-error" id="name-error" aria-live="polite"></p>
+            </div>
+
+            <div class="two">
+              <div class="field">
+                <label class="label" for="phone">Mobile number</label>
+                <div class="input-pill">
+                  <span class="prefix" aria-hidden="true">+91</span>
+                  <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="16" required aria-describedby="phone-error" placeholder="98765 43210">
+                </div>
+                <p class="field-error" id="phone-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="label" for="checkIn">Check-in date</label>
+                <div class="input-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                  <input id="checkIn" name="checkIn" type="date" required aria-describedby="checkIn-error checkIn-hint">
+                </div>
+                <p class="field-error" id="checkIn-error" aria-live="polite"></p>
+                <p class="field-hint" id="checkIn-hint">Today or up to 6 months ahead.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn--violet" type="submit" id="confirm-btn">Confirm booking</button>
+            <a class="btn btn--white" href="index.html">Change room</a>
+            <span class="secure-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4.4 3 8 7 9 4-1 7-4.6 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Pay at move-in. No charge now.</span>
+          </div>
+        </form>
+
+        <aside class="summary iridescent glow" aria-labelledby="summary-title">
+          <div class="summary-room">
+            <img id="sum-img" src="assets/placeholder.svg" alt="" width="96" height="96">
+            <div>
+              <h2 id="summary-title">—</h2>
+              <p id="sum-loc"></p>
+              <div class="meta-row" id="sum-meta"></div>
+            </div>
+          </div>
+
+          <div class="bill">
+            <dl aria-live="polite">
+              <div class="row"><dt>First month’s rent</dt><dd id="bill-rent">₹0</dd></div>
+              <div class="row"><dt>Security deposit <span class="sr-only">(refundable)</span></dt><dd id="bill-deposit">₹0</dd></div>
+              <div class="row row--discount" id="bill-discount-row" hidden><dt>Coupon discount</dt><dd id="bill-discount">−₹0</dd></div>
+              <div class="row row--total"><dt>Total payable</dt><dd id="bill-total">₹0</dd></div>
+            </dl>
+
+            <div class="coupon">
+              <label class="label" for="coupon">Coupon code</label>
+              <div class="coupon-row" id="coupon-entry">
+                <div class="input-pill">
+                  <input id="coupon" name="coupon" type="text" autocomplete="off" maxlength="20" placeholder="Enter code" aria-describedby="coupon-msg">
+                </div>
+                <button class="btn btn--mint" type="button" id="coupon-apply">Apply</button>
+              </div>
+              <div class="coupon-applied" id="coupon-applied" hidden>
+                <span class="code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span id="coupon-applied-code">WELCOME500</span></span>
+                <button class="icon-btn" type="button" id="coupon-remove" aria-label="Remove coupon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+              </div>
+              <p class="coupon-msg" id="coupon-msg" aria-live="polite"></p>
+              <p class="coupon-hint">New here? Try <code>WELCOME500</code> for ₹500 off.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="sheet" id="success-dialog" aria-labelledby="success-title" aria-describedby="success-text">
+    <div class="sheet-body">
+      <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <h2 id="success-title">Booking successful!</h2>
+      <p id="success-text">Your stay is reserved.</p>
+      <span class="ref" id="success-ref">MS-000000</span>
+      <div class="sheet-actions">
+        <a class="btn btn--violet" href="bookings.html">My bookings</a>
+        <a class="btn btn--white" href="index.html">Explore more</a>
+      </div>
+    </div>
+  </dialog>
+
+  <footer class="site-footer wrap">
+    <div class="footer-inner glass">
+      <span>© <span data-year>2026</span> MYSHELTER · Built for student stays</span>
+      <nav aria-label="Footer">
+        <a href="index.html">Explore</a>
+        <a href="bookings.html">My bookings</a>
+      </nav>
+    </div>
+  </footer>
+
+  <noscript><div class="wrap"><p class="notice">MYSHELTER needs JavaScript enabled to complete a booking.</p></div></noscript>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/store.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/checkout.js" defer></script>
+</body>
+</html>
