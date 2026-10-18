@@ -5,6 +5,10 @@
   "outputDirectory": "dist",
   "cleanUrls": false,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/auth", "destination": "/auth.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

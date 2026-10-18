@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Account — MYSHELTER</title>
+  <meta name="description" content="Sign in or register for MYSHELTER hotel bookings.">
+  <meta name="theme-color" content="#e8e0d8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="auth">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+        <span class="brand-text">MYSHELTER</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Rooms</a>
+        <a class="nav-link" href="bookings.html"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="auth-wrap wrap">
+      <!-- Signed-in State Card -->
+      <div class="auth-card panel" id="signed-in-card" hidden>
+        <div class="auth-card-head">
+          <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+          <h2>Your Account</h2>
+          <p id="signed-in-details"></p>
+        </div>
+        <div class="form-actions auth-actions-center">
+          <a class="btn btn--olive" href="index.html">Explore Rooms</a>
+          <a class="btn btn--white" href="bookings.html">My Bookings</a>
+          <button type="button" class="btn btn--danger" id="auth-page-signout">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Auth Form Card -->
+      <div class="auth-card panel" id="auth-form-card">
+        <div class="auth-tabs" role="tablist" aria-label="Account options">
+          <button type="button" class="auth-tab is-active" id="tab-login" role="tab" aria-selected="true" aria-controls="login-panel">Sign In</button>
+          <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="register-panel">Create Account</button>
+        </div>
+
+        <!-- 1. SIGN IN FORM -->
+        <div class="auth-panel" id="login-panel" role="tabpanel" aria-labelledby="tab-login">
+          <div class="auth-card-head">
+            <h2>Welcome Back</h2>
+            <p>Sign in to manage your hotel bookings and saved preferences.</p>
+          </div>
+
+          <form id="login-form" novalidate>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label" for="login-email">Email address</label>
+                <div class="input-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+                </div>
+                <p class="field-error" id="login-email-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="label" for="login-password">Password</label>
+                <div class="input-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+                </div>
+                <p class="field-error" id="login-password-error" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn--olive btn--full" type="submit" id="login-btn">Sign In</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 2. REGISTER FORM -->
+        <div class="auth-panel" id="register-panel" role="tabpanel" aria-labelledby="tab-register" hidden>
+          <div class="auth-card-head">
+            <h2>Create Your Account</h2>
+            <p>Book hotel rooms faster and save your stay preferences.</p>
+          </div>
+
+          <form id="register-form" novalidate>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label" for="reg-name">Full name</label>
+                <div class="input-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                  <input id="reg-name" name="name" type="text" autocomplete="name" maxlength="80" required placeholder="e.g. Ananya Sharma">
+                </div>
+                <p class="field-error" id="reg-name-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="label" for="reg-email">Email address</label>
+                <div class="input-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <input id="reg-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+                </div>
+                <p class="field-error" id="reg-email-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="label" for="reg-phone">Mobile number</label>
+                <div class="input-pill">
+                  <span class="prefix" aria-hidden="true">+91</span>
+                  <input id="reg-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="16" required placeholder="98765 43210">
+                </div>
+                <p class="field-error" id="reg-phone-error" aria-live="polite"></p>
+              </div>
+
+              <div class="field">
+                <label class="label" for="reg-password">Password</label>
+                <div class="input-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input id="reg-password" name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters">
+                </div>
+                <p class="field-error" id="reg-password-error" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn--olive btn--full" type="submit" id="reg-btn">Create Account</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-inner">
+      <span>© <span data-year>2026</span> MYSHELTER</span>
+      <span class="footer-note">Demo project. Tariffs are indicative.</span>
+      <nav aria-label="Footer">
+        <a href="index.html">Rooms</a>
+        <a href="bookings.html">My bookings</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/store.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/auth.js" defer></script>
+  <script src="js/auth-page.js" defer></script>
+</body>
+</html>

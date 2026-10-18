@@ -50,12 +50,45 @@
         '<span class="orb">' + I.calendar + '</span>' +
         '<h2>No bookings yet</h2>' +
         '<p>Your confirmed rooms appear here.</p>' +
-        '<div class="actions"><a class="btn btn--violet" href="index.html">Browse rooms</a></div></div>';
+        '<div class="actions"><a class="btn btn--olive" href="index.html">Browse rooms</a></div></div>';
     } else {
       host.innerHTML = list.map(bookingHTML).join('');
       host.querySelectorAll('img').forEach(UI.bindImageFallback);
     }
     UI.refreshBookingBadge();
+  }
+
+  async function loadDatabaseBookings() {
+    if (!window.MyShelterAuth || !window.MyShelterAuth.isLoggedIn()) {
+      render();
+      return;
+    }
+
+    try {
+      summary.textContent = 'Syncing bookings with database…';
+      var res = await window.MyShelterAuth.authFetch('/api/bookings');
+      if (res.ok) {
+        var data = await res.json();
+        if (data.ok && Array.isArray(data.bookings)) {
+          // Merge database bookings with any un-synced local bookings
+          var localList = Store.getBookings();
+          var dbIds = new Set(data.bookings.map(function (b) { return b.bookingId; }));
+          var merged = data.bookings.slice();
+
+          localList.forEach(function (lb) {
+            if (!dbIds.has(lb.bookingId)) {
+              merged.push(lb);
+            }
+          });
+
+          Store.saveBookings(merged);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not sync with database bookings:', err);
+    } finally {
+      render();
+    }
   }
 
   host.addEventListener('click', function (e) {
@@ -72,8 +105,21 @@
 
   function doCancel() {
     if (!pendingCancel) return;
-    Store.updateBooking(pendingCancel, { status: 'cancelled', cancelledAt: new Date().toISOString() });
-    UI.toast('Booking ' + pendingCancel + ' cancelled', 'success');
+    var idToCancel = pendingCancel;
+    Store.updateBooking(idToCancel, { status: 'cancelled', cancelledAt: new Date().toISOString() });
+
+    // Sync cancellation to Supabase database
+    if (window.MyShelterAuth) {
+      window.MyShelterAuth.authFetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: idToCancel })
+      }).catch(function (err) {
+        console.warn('Database cancellation sync error:', err);
+      });
+    }
+
+    UI.toast('Booking ' + idToCancel + ' cancelled', 'success');
     pendingCancel = null;
     render();
   }
@@ -89,6 +135,6 @@
     if (!e.key || e.key === 'myshelter:bookings') render();
   });
 
-  render();
+  loadDatabaseBookings();
   UI.storageNotice(document.querySelector('.page-head'));
 })();

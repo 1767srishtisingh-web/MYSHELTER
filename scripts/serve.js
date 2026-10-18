@@ -46,15 +46,68 @@ function send(res, status, body, type, extra) {
 }
 
 const server = http.createServer((req, res) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    return send(res, 405, 'Method not allowed', TYPES['.txt'], { Allow: 'GET, HEAD' });
-  }
-  let pathname;
+  let urlObj;
   try {
-    pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    urlObj = new URL(req.url, 'http://localhost');
   } catch (e) {
     return send(res, 400, 'Bad request', TYPES['.txt']);
   }
+  let pathname = decodeURIComponent(urlObj.pathname);
+
+  // Handle Serverless API routes locally
+  if (pathname.startsWith('/api/')) {
+    let apiPath = pathname.replace(/^\/api\//, '');
+    let fileCandidates = [
+      path.resolve(__dirname, '..', 'api', apiPath + '.js'),
+      path.resolve(__dirname, '..', 'api', apiPath, 'index.js')
+    ];
+    let targetFile = fileCandidates.find((f) => fs.existsSync(f));
+
+    if (!targetFile) {
+      return send(res, 404, JSON.stringify({ ok: false, error: 'API route not found' }), TYPES['.json']);
+    }
+
+    let rawBody = '';
+    req.on('data', (chunk) => { rawBody += chunk; });
+    req.on('end', async () => {
+      try {
+        req.body = rawBody ? JSON.parse(rawBody) : {};
+      } catch (e) {
+        req.body = rawBody;
+      }
+      req.query = Object.fromEntries(urlObj.searchParams.entries());
+
+      res.status = (code) => {
+        res.statusCode = code;
+        return res;
+      };
+      res.json = (data) => {
+        send(res, res.statusCode || 200, JSON.stringify(data), TYPES['.json']);
+      };
+
+      try {
+        // Clear require cache in dev so code changes reflect immediately
+        delete require.cache[require.resolve(targetFile)];
+        const handler = require(targetFile);
+        await handler(req, res);
+      } catch (err) {
+        console.error('API Error:', err);
+        if (!res.writableEnded) {
+          send(res, 500, JSON.stringify({ ok: false, error: err.message }), TYPES['.json']);
+        }
+      }
+    });
+    return;
+  }
+
+  // Handle rewrites
+  if (pathname === '/admin') pathname = '/admin.html';
+  if (pathname === '/auth') pathname = '/auth.html';
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return send(res, 405, 'Method not allowed', TYPES['.txt'], { Allow: 'GET, HEAD' });
+  }
+
   if (pathname.endsWith('/')) pathname += 'index.html';
   const file = path.resolve(ROOT, '.' + pathname);
   // Block path traversal and dotfiles

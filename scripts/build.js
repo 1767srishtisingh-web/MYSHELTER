@@ -13,7 +13,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
-const PAGES = ['index.html', 'checkout.html', 'bookings.html', '404.html'];
+const PAGES = ['index.html', 'checkout.html', 'bookings.html', '404.html', 'auth.html', 'admin.html'];
 const DIRS = ['css', 'js', 'assets'];
 const problems = [];
 

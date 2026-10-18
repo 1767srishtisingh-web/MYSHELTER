@@ -166,10 +166,18 @@
       discount: bill.discount,
       total: bill.total,
       coupon: appliedCode,
-      status: 'confirmed',
-      createdAt: new Date().toISOString()
-    };
     var persisted = Store.addBooking(booking);
+
+    // Save to Supabase backend linked to authenticated user
+    if (window.MyShelterAuth) {
+      window.MyShelterAuth.authFetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(booking)
+      }).catch(function (err) {
+        console.warn('Could not sync booking to database:', err);
+      });
+    }
 
     form.reset();
     fields.nights.value = '1';
