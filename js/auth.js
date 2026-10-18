@@ -184,3 +184,4 @@
 
   root.MyShelterAuth = Auth;
 })(typeof window !== 'undefined' ? window : globalThis);
+

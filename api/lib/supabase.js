@@ -26,3 +26,4 @@ function getSupabase() {
 }
 
 module.exports = { getSupabase };
+
