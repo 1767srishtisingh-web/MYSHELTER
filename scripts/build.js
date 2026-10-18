@@ -46,6 +46,26 @@ for (const page of PAGES) {
   }
 }
 
+/* 3. Syntax checks */
+const vm = require('vm');
+for (const dir of ['js', 'api']) {
+  const scan = (d) => {
+    if (!fs.existsSync(d)) return;
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, entry.name);
+      if (entry.isDirectory()) scan(p);
+      else if (p.endsWith('.js')) {
+        try {
+          new vm.Script(fs.readFileSync(p, 'utf8'), { filename: p });
+        } catch (e) {
+          problems.push(`Syntax error in ${p}: ${e.message}`);
+        }
+      }
+    }
+  };
+  scan(path.join(ROOT, dir));
+}
+
 if (problems.length) {
   console.error('Build failed:\n  - ' + problems.join('\n  - '));
   process.exit(1);

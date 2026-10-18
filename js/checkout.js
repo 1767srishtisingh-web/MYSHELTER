@@ -165,7 +165,8 @@
       taxes: bill.taxes,
       discount: bill.discount,
       total: bill.total,
-      coupon: appliedCode,
+      coupon: appliedCode
+    };
     var persisted = Store.addBooking(booking);
 
     // Save to Supabase backend linked to authenticated user
