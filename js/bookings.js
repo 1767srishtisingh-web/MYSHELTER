@@ -21,11 +21,11 @@
     return '<article class="booking glass glow' + (cancelled ? ' is-cancelled' : '') + '" data-id="' + esc(b.bookingId) + '">' +
       '<img src="' + esc(src) + '" alt="" loading="lazy" width="120" height="100">' +
       '<div>' +
-        '<h2>' + esc(b.roomTitle) + ' – ' + esc(b.city) + '</h2>' +
-        '<p class="details">' + esc(b.locality) + ' · Booked for ' + esc(b.name) + ' · +91 ' + esc(b.phone) + '</p>' +
+        '<h2>' + esc(b.roomTitle) + '</h2>' +
+        '<p class="details">' + esc(b.locality) + ', ' + esc(b.city) + (b.name ? ' · ' + esc(b.name) : '') + (b.phone ? ' · +91 ' + esc(b.phone) : '') + '</p>' +
         '<div class="meta-row">' +
           '<span class="meta meta--type">' + I.bed + esc(b.type) + '</span>' +
-          '<span class="meta">' + I.calendar + 'Check-in ' + esc(Core.formatDate(b.checkIn)) + '</span>' +
+          '<span class="meta">' + I.calendar + esc(Core.formatDate(b.checkIn)) + (b.nights ? ' · ' + Number(b.nights) + (Number(b.nights) === 1 ? ' night' : ' nights') : '') + '</span>' +
           '<span class="meta">' + I.tag + esc(b.bookingId) + '</span>' +
           (b.coupon ? '<span class="meta">' + esc(b.coupon) + '</span>' : '') +
         '</div>' +
@@ -42,15 +42,15 @@
     var list = Store.getBookings();
     var active = list.filter(function (b) { return b.status !== 'cancelled'; }).length;
     summary.textContent = list.length
-      ? active + ' active · ' + (list.length - active) + ' cancelled · saved in this browser'
-      : 'Saved in this browser.';
+      ? active + ' active · ' + (list.length - active) + ' cancelled'
+      : '';
 
     if (!list.length) {
       host.innerHTML = '<div class="empty glass" role="status">' +
         '<span class="orb">' + I.calendar + '</span>' +
         '<h2>No bookings yet</h2>' +
-        '<p>When you book a room it’ll show up here, even after you close the browser.</p>' +
-        '<div class="actions"><a class="btn btn--violet" href="index.html">Find a room</a></div></div>';
+        '<p>Your confirmed rooms appear here.</p>' +
+        '<div class="actions"><a class="btn btn--violet" href="index.html">Browse rooms</a></div></div>';
     } else {
       host.innerHTML = list.map(bookingHTML).join('');
       host.querySelectorAll('img').forEach(UI.bindImageFallback);

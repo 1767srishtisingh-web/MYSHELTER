@@ -1,10 +1,8 @@
 /*
- * MYSHELTER — room & hostel listings.
- * All data is local (no backend), as described in the project report.
- * Photos are free-to-use Unsplash images. If one fails to load, the UI swaps in
- * assets/placeholder.svg so a card never shows a broken image.
- *
- * Every money field is a Number (never a string) so totals add correctly.
+ * MYSHELTER — hotel rooms in Delhi, Noida and Ghaziabad.
+ * All data is local (no backend). Tariffs are indicative per night.
+ * Photos are representative Unsplash images; if one fails to load the UI
+ * shows assets/placeholder.svg instead.
  */
 (function (root) {
   'use strict';
@@ -13,62 +11,170 @@
     return 'https://images.unsplash.com/photo-' + id + '?auto=format&fit=crop&w=900&q=70';
   };
 
-  var P = {
-    living1: U('1522708323590-d24dbb6b0267'),
-    living2: U('1502672260266-1c1ef2d93688'),
-    bed1: U('1505691938895-1758d7feb511'),
-    apt1: U('1560448204-e02f11c3d0e2'),
-    living3: U('1493809842364-78817add7ffb'),
-    living4: U('1554995207-c18c203602cb'),
-    kitchen1: U('1484154218962-a197022b5858'),
-    living5: U('1586023492125-27b2c045efd7'),
-    bed2: U('1540518614846-7eded433c457'),
-    bed3: U('1595526114035-0d45ed16cfbf'),
-    bed4: U('1505693416388-ac5ce068fe85'),
-    bed5: U('1522771739844-6a9f6d5f14af'),
-    apt2: U('1560185007-cde436f6a4d0'),
-    apt3: U('1560185893-a55cbc8c57e8'),
-    living6: U('1502005229762-cf1b2da7c5d6'),
-    living7: U('1513694203232-719a280e022f'),
-    desk1: U('1536376072261-38c75010e6c9'),
-    kitchen2: U('1556020685-ae41abfc9365'),
-    bed6: U('1598928506311-c55ded91a20c'),
-    bed7: U('1616594039964-ae9021a400a0'),
-    bed8: U('1631049307264-da0ec9d70304')
+  var PHOTOS = {
+    room: [
+      U('1582719478250-c89cae4dc85b'), U('1611892440504-42a792e24d32'), U('1590490360182-c33d57733427'),
+      U('1618773928121-c32242e63f39'), U('1578683010236-d716f9a3f461'), U('1631049307264-da0ec9d70304'),
+      U('1591088398332-8a7791972843'), U('1566665797739-1674de7a421a'), U('1595576508898-0ad5c879a061')
+    ],
+    suite: [U('1578683010236-d716f9a3f461'), U('1590490360182-c33d57733427'), U('1618773928121-c32242e63f39')],
+    hotel: [
+      U('1566073771259-6a8506099945'), U('1542314831-068cd1dbfeeb'), U('1551882547-ff40c63fe5fa'),
+      U('1564501049412-61c2a3083791'), U('1520250497591-112f2f40a3f4'), U('1571896349842-33c89424de2d')
+    ]
   };
 
-  var ROOMS = [
-    { id: 'ms-101', title: 'Green View PG', city: 'Delhi', locality: 'North Campus, Kamla Nagar', type: 'Single Room', category: 'PG', gender: 'Girls', rent: 9500, deposit: 9500, amenities: ['wifi', 'food'], rating: 4.6, reviews: 128, images: [P.bed3, P.desk1, P.kitchen1], highlight: '5 min walk to Hindu College' },
-    { id: 'ms-102', title: 'Sunny 1 BHK Flat', city: 'Pune', locality: 'Viman Nagar', type: '1 BHK', category: 'Flat', gender: 'Any', rent: 14000, deposit: 28000, amenities: ['wifi', 'ac'], rating: 4.4, reviews: 76, images: [P.living1, P.bed1, P.kitchen2], highlight: 'Balcony with morning sun' },
-    { id: 'ms-103', title: 'Scholars Boys Hostel', city: 'Kota', locality: 'Rajeev Gandhi Nagar', type: 'Shared Room', category: 'Hostel', gender: 'Boys', rent: 6500, deposit: 5000, amenities: ['wifi', 'food'], rating: 4.2, reviews: 214, images: [P.bed5, P.desk1, P.kitchen1], highlight: 'Near coaching hubs, 24×7 study hall' },
-    { id: 'ms-104', title: 'Pink City Girls PG', city: 'Jaipur', locality: 'Malviya Nagar', type: 'Single Room', category: 'PG', gender: 'Girls', rent: 8500, deposit: 8500, amenities: ['wifi', 'ac', 'food'], rating: 4.7, reviews: 162, images: [P.bed7, P.bed2, P.kitchen2], highlight: 'CCTV, warden on site, home-style meals' },
-    { id: 'ms-105', title: 'Lakeside 2 BHK Apartment', city: 'Bengaluru', locality: 'Bellandur', type: '2 BHK', category: 'Flat', gender: 'Any', rent: 26000, deposit: 78000, amenities: ['wifi', 'ac'], rating: 4.5, reviews: 54, images: [P.apt1, P.living3, P.bed4], highlight: 'Gated society, gym and pool' },
-    { id: 'ms-106', title: 'Metro Edge Boys PG', city: 'Hyderabad', locality: 'Ameerpet', type: 'Shared Room', category: 'PG', gender: 'Boys', rent: 7000, deposit: 7000, amenities: ['wifi', 'food'], rating: 4.1, reviews: 98, images: [P.bed6, P.living6, P.kitchen1], highlight: '2 min to Ameerpet metro' },
-    { id: 'ms-107', title: 'Cosy 1 BHK Studio', city: 'Mumbai', locality: 'Andheri West', type: '1 BHK', category: 'Flat', gender: 'Any', rent: 32000, deposit: 96000, amenities: ['wifi', 'ac'], rating: 4.3, reviews: 41, images: [P.living4, P.bed8, P.kitchen2], highlight: 'Fully furnished, walk to Lokhandwala' },
-    { id: 'ms-108', title: 'Sakura Girls Hostel', city: 'Pune', locality: 'Kothrud', type: 'Shared Room', category: 'Hostel', gender: 'Girls', rent: 7500, deposit: 5000, amenities: ['wifi', 'food'], rating: 4.5, reviews: 187, images: [P.bed2, P.bed5, P.desk1], highlight: 'Near MIT-WPU, biometric entry' },
-    { id: 'ms-109', title: 'Campus Corner 2 BHK', city: 'Delhi', locality: 'Mukherjee Nagar', type: '2 BHK', category: 'Flat', gender: 'Any', rent: 22000, deposit: 44000, amenities: ['wifi', 'ac'], rating: 4.0, reviews: 63, images: [P.living2, P.bed1, P.kitchen1], highlight: 'Ideal for 3–4 flatmates' },
-    { id: 'ms-110', title: 'Heritage Boys Hostel', city: 'Jaipur', locality: 'Jawahar Nagar', type: 'Shared Room', category: 'Hostel', gender: 'Boys', rent: 6000, deposit: 4000, amenities: ['food'], rating: 3.9, reviews: 132, images: [P.bed6, P.bed5, P.kitchen1], highlight: 'Budget pick near University of Rajasthan' },
-    { id: 'ms-111', title: 'Silicon Nest Co-living', city: 'Bengaluru', locality: 'Koramangala 5th Block', type: 'Single Room', category: 'PG', gender: 'Any', rent: 15500, deposit: 15500, amenities: ['wifi', 'ac', 'food'], rating: 4.8, reviews: 245, images: [P.bed8, P.living7, P.kitchen2], highlight: 'Housekeeping, laundry, community events' },
-    { id: 'ms-112', title: 'Marine View 2 BHK', city: 'Mumbai', locality: 'Powai', type: '2 BHK', category: 'Flat', gender: 'Any', rent: 48000, deposit: 144000, amenities: ['wifi', 'ac'], rating: 4.6, reviews: 37, images: [P.apt3, P.living5, P.bed4], highlight: 'Lake view, near IIT Bombay' },
-    { id: 'ms-113', title: 'Lotus Girls PG', city: 'Hyderabad', locality: 'Gachibowli', type: 'Single Room', category: 'PG', gender: 'Girls', rent: 11000, deposit: 11000, amenities: ['wifi', 'ac', 'food'], rating: 4.4, reviews: 109, images: [P.bed7, P.bed3, P.living6], highlight: 'Near Financial District, AC rooms' },
-    { id: 'ms-114', title: 'Budget 1 BHK Near Campus', city: 'Kota', locality: 'Talwandi', type: '1 BHK', category: 'Flat', gender: 'Any', rent: 9000, deposit: 18000, amenities: ['wifi'], rating: 4.0, reviews: 28, images: [P.living6, P.bed1, P.kitchen1], highlight: 'Semi-furnished, quiet lane' },
-    { id: 'ms-115', title: 'Marina Girls Hostel', city: 'Chennai', locality: 'Guindy', type: 'Shared Room', category: 'Hostel', gender: 'Girls', rent: 8000, deposit: 6000, amenities: ['wifi', 'food'], rating: 4.3, reviews: 91, images: [P.bed2, P.desk1, P.kitchen2], highlight: 'Walk to Anna University' },
-    { id: 'ms-116', title: 'Tech Park 1 BHK', city: 'Chennai', locality: 'OMR, Thoraipakkam', type: '1 BHK', category: 'Flat', gender: 'Any', rent: 16500, deposit: 50000, amenities: ['wifi', 'ac'], rating: 4.2, reviews: 45, images: [P.apt2, P.bed4, P.kitchen2], highlight: 'Power backup, covered parking' },
-    { id: 'ms-117', title: 'Rajpath 2 BHK Residency', city: 'Jaipur', locality: 'Vaishali Nagar', type: '2 BHK', category: 'Flat', gender: 'Any', rent: 18000, deposit: 36000, amenities: ['wifi', 'ac'], rating: 4.5, reviews: 58, images: [P.living3, P.bed8, P.kitchen1], highlight: 'Spacious, near Amrapali Circle' },
-    { id: 'ms-118', title: 'Scholar Boys PG', city: 'Pune', locality: 'Hinjewadi Phase 1', type: 'Single Room', category: 'PG', gender: 'Boys', rent: 10500, deposit: 10500, amenities: ['wifi', 'ac', 'food'], rating: 4.3, reviews: 84, images: [P.bed1, P.desk1, P.kitchen2], highlight: 'Shuttle to IT park' }
+  // name, stars, city, area, address, hotel amenities, base tariff for the entry room type
+  var HOTELS = [
+    // ---------- Delhi ----------
+    ['The Imperial New Delhi', 5, 'Delhi', 'Connaught Place', '1, Janpath, Connaught Place, New Delhi 110001', ['pool', 'parking'], 16500],
+    ['Taj Palace, New Delhi', 5, 'Delhi', 'Chanakyapuri', '2, Sardar Patel Marg, Diplomatic Enclave, Chanakyapuri, New Delhi 110021', ['pool', 'parking'], 15000],
+    ['The Leela Palace New Delhi', 5, 'Delhi', 'Chanakyapuri', 'Diplomatic Enclave, Chanakyapuri, New Delhi 110023', ['pool', 'parking'], 19500],
+    ['The Oberoi, New Delhi', 5, 'Delhi', 'Lodhi Road', 'Dr. Zakir Hussain Marg, New Delhi 110003', ['pool', 'parking'], 21000],
+    ['ITC Maurya', 5, 'Delhi', 'Chanakyapuri', 'Sardar Patel Marg, Diplomatic Enclave, Chanakyapuri, New Delhi 110021', ['pool', 'parking'], 14500],
+    ['Shangri-La Eros New Delhi', 5, 'Delhi', 'Connaught Place', '19, Ashoka Road, Connaught Place, New Delhi 110001', ['pool', 'parking'], 13000],
+    ['The Lalit New Delhi', 5, 'Delhi', 'Connaught Place', 'Barakhamba Avenue, Connaught Place, New Delhi 110001', ['pool', 'parking'], 11500],
+    ['Le Méridien New Delhi', 5, 'Delhi', 'Janpath', 'Windsor Place, Janpath, New Delhi 110001', ['pool', 'parking'], 11000],
+    ['The Claridges New Delhi', 5, 'Delhi', 'Lutyens’ Delhi', '12, Dr. APJ Abdul Kalam Road, New Delhi 110011', ['pool', 'parking'], 12500],
+    ['Hyatt Regency Delhi', 5, 'Delhi', 'Bhikaiji Cama Place', 'Bhikaiji Cama Place, Ring Road, New Delhi 110066', ['pool', 'parking'], 12000],
+    ['JW Marriott Hotel New Delhi Aerocity', 5, 'Delhi', 'Aerocity', 'Asset Area 4, Hospitality District, Aerocity, New Delhi 110037', ['pool', 'parking'], 13500],
+    ['Andaz Delhi', 5, 'Delhi', 'Aerocity', 'Asset No. 1, Aerocity, New Delhi 110037', ['pool', 'parking'], 14000],
+    ['Pullman New Delhi Aerocity', 5, 'Delhi', 'Aerocity', 'Asset No. 2, GMR Hospitality District, Aerocity, New Delhi 110037', ['pool', 'parking'], 10500],
+    ['Novotel New Delhi Aerocity', 4, 'Delhi', 'Aerocity', 'Asset No. 2, GMR Hospitality District, Aerocity, New Delhi 110037', ['pool', 'parking'], 7800],
+    ['Holiday Inn New Delhi International Airport', 4, 'Delhi', 'Aerocity', 'Asset No. 12, Aerocity, New Delhi 110037', ['pool', 'parking'], 7200],
+    ['Radisson Blu Plaza Delhi Airport', 5, 'Delhi', 'Mahipalpur', 'National Highway 8, Mahipalpur, New Delhi 110037', ['pool', 'parking'], 8900],
+    ['Sheraton New Delhi Hotel', 5, 'Delhi', 'Saket', 'District Centre, Saket, New Delhi 110017', ['pool', 'parking'], 9800],
+    ['Eros Hotel New Delhi, Nehru Place', 5, 'Delhi', 'Nehru Place', 'American Plaza, International Trade Tower, Nehru Place, New Delhi 110019', ['pool', 'parking'], 9200],
+    ['Crowne Plaza New Delhi Mayur Vihar Noida', 5, 'Delhi', 'Mayur Vihar', '13B, Mayur Place, District Centre, Mayur Vihar, New Delhi 110091', ['pool', 'parking'], 8200],
+    ['Holiday Inn New Delhi Mayur Vihar Noida', 4, 'Delhi', 'Mayur Vihar', '13A, Mayur Place, District Centre, Mayur Vihar, New Delhi 110091', ['pool', 'parking'], 6900],
+    ['Bloomrooms @ Janpath', 3, 'Delhi', 'Janpath', '9, Janpath Lane, Connaught Place, New Delhi 110001', [], 4200],
+
+    // ---------- Noida ----------
+    ['Radisson Blu MBD Hotel Noida', 5, 'Noida', 'Sector 18', 'L-2, Sector 18, beside Centrestage Mall, Noida 201301', ['pool', 'parking'], 8800],
+    ['Radisson Noida', 4, 'Noida', 'Sector 55', 'C Block, Sector 55, Noida 201307', ['parking'], 5600],
+    ['Fortune Inn Grazia', 4, 'Noida', 'Sector 27', 'Plot 1A, Block I, Sector 27, Noida 201301', ['parking'], 5200],
+    ['Mosaic Hotel Noida', 4, 'Noida', 'Sector 18', 'C-1, Sector 18, Noida 201301', ['parking'], 5800],
+    ['Sandal Suites by Lemon Tree Hotels', 4, 'Noida', 'Sector 135', 'Assotech Business Cresterra, Noida–Greater Noida Expressway, Sector 135, Noida 201301', ['parking'], 6100],
+    ['Ginger Noida Sector 63', 3, 'Noida', 'Sector 63', 'Plot 46/1A, Block H, Sector 63, Noida 201301', ['parking'], 3400],
+    ['Mint City Centre Suites', 3, 'Noida', 'Sector 50', 'A-17, Block A, Sector 50, Noida 201301', ['parking'], 3200],
+    ['Nirula’s Hotel Noida', 3, 'Noida', 'Sector 2', 'C-135, DSC Marg, Sector 2, Noida 201301', ['parking'], 3600],
+    ['The Royale Park', 3, 'Noida', 'Sector 6', 'G-43, Sector 6, Noida 201301', ['parking'], 3000],
+    ['Hotel Royale Paradise', 3, 'Noida', 'Sector 12', 'Y-349C, Amaltash Marg, Sector 12, Noida 201301', ['parking'], 2900],
+    ['Savoy Suites Greater Noida', 4, 'Noida', 'Greater Noida', 'Destination Point, Institutional Area, Greater Noida Expressway, Greater Noida 201301', ['pool', 'parking'], 5900],
+    ['Crowne Plaza Greater Noida', 5, 'Noida', 'Greater Noida', 'Institutional Green 1, Greater Noida 201306', ['pool', 'parking'], 8400],
+    ['Jaypee Greens Golf & Spa Resort', 5, 'Noida', 'Greater Noida', 'G Block, Surajpur–Kasna Road, Jaypee Greens, Greater Noida 201308', ['pool', 'parking'], 9500],
+    ['Radisson Blu Greater Noida', 5, 'Noida', 'Greater Noida', 'C-8, Site IV, Kasna, Greater Noida 201306', ['pool', 'parking'], 7600],
+
+    // ---------- Ghaziabad ----------
+    ['Radisson Blu Kaushambi Delhi NCR', 5, 'Ghaziabad', 'Kaushambi', 'Plot 3, Kaushambi, Ghaziabad 201010', ['pool', 'parking'], 8300],
+    ['Radisson Blu Towers Kaushambi Delhi NCR', 5, 'Ghaziabad', 'Kaushambi', 'Kaushambi, Ghaziabad 201010', ['pool', 'parking'], 8700],
+    ['Lemon Tree Hotel, East Delhi Mall', 4, 'Ghaziabad', 'Kaushambi', 'East Delhi Mall, Kaushambi, Ghaziabad 201010', ['parking'], 5400],
+    ['Country Inn & Suites by Radisson, Sahibabad', 4, 'Ghaziabad', 'Sahibabad', 'Site IV, Sahibabad Industrial Area, Ghaziabad 201010', ['pool', 'parking'], 5700],
+    ['Ramada by Wyndham Ghaziabad Vasundhara', 4, 'Ghaziabad', 'Vasundhara', 'Vasundhara, Ghaziabad 201012', ['pool', 'parking'], 5300],
+    ['Golden Tulip Vasundhara', 4, 'Ghaziabad', 'Vasundhara', 'Vasundhara, Ghaziabad 201012', ['parking'], 4900],
+    ['Mahagun Sarovar Portico Suites', 4, 'Ghaziabad', 'Vaishali', 'Sector 4, Vaishali, Ghaziabad 201010', ['parking'], 5000],
+    ['Orana Hotel & Convention', 4, 'Ghaziabad', 'Vaishali', 'Vaishali, Ghaziabad 201010', ['parking'], 4700],
+    ['KPG Sarovar Portico', 4, 'Ghaziabad', 'Raj Nagar Extension', 'Raj Nagar Extension, Ghaziabad 201017', ['parking'], 4600],
+    ['Ginger Ghaziabad, Raj Nagar Extension', 3, 'Ghaziabad', 'Raj Nagar Extension', 'Raj Nagar Extension, Ghaziabad 201017', ['parking'], 3200],
+    ['Hotel Krishna Sagar', 3, 'Ghaziabad', 'Raj Nagar', 'Raj Nagar, Ghaziabad 201002', ['parking'], 2800],
+    ['Hotel Black Stone', 3, 'Ghaziabad', 'Vasundhara', 'Vasundhara, Ghaziabad 201012', [], 2600]
   ];
 
+  // Room types offered by each hotel class. factor = tariff multiplier on the hotel base.
+  var LADDER = {
+    5: [
+      { type: 'Deluxe', bed: 'King bed', guests: 2, size: 36, factor: 1, breakfast: false, freeCancellation: true },
+      { type: 'Executive', bed: 'King bed', guests: 2, size: 42, factor: 1.4, breakfast: true, freeCancellation: true },
+      { type: 'Suite', bed: 'King bed · Living room', guests: 3, size: 75, factor: 2.6, breakfast: true, freeCancellation: false }
+    ],
+    4: [
+      { type: 'Standard', bed: 'Queen bed', guests: 2, size: 26, factor: 1, breakfast: false, freeCancellation: false },
+      { type: 'Deluxe', bed: 'King bed', guests: 2, size: 30, factor: 1.25, breakfast: true, freeCancellation: true },
+      { type: 'Executive', bed: 'King bed', guests: 3, size: 36, factor: 1.6, breakfast: true, freeCancellation: true }
+    ],
+    3: [
+      { type: 'Standard', bed: 'Double bed', guests: 2, size: 20, factor: 1, breakfast: false, freeCancellation: false },
+      { type: 'Deluxe', bed: 'Queen bed', guests: 2, size: 24, factor: 1.3, breakfast: true, freeCancellation: true },
+      { type: 'Standard', bed: 'Twin beds', guests: 2, size: 22, factor: 1.05, breakfast: true, freeCancellation: true }
+    ]
+  };
+
+  function slug(s) {
+    return s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 28);
+  }
+
+  function roundTo(n, step) { return Math.round(n / step) * step; }
+
+  // GST on hotel rooms: 5% up to ₹7,500 per night, 18% above.
+  function gstFor(price) { return Math.round(price * (price <= 7500 ? 0.05 : 0.18)); }
+
+  var ROOMS = [];
+  HOTELS.forEach(function (h, hi) {
+    var name = h[0], stars = h[1], city = h[2], area = h[3], address = h[4], hotelAmenities = h[5], base = h[6];
+    LADDER[stars].forEach(function (t, ti) {
+      var price = roundTo(base * t.factor, 100);
+      var amenities = ['wifi'];
+      if (t.breakfast) amenities.push('breakfast');
+      hotelAmenities.forEach(function (a) { amenities.push(a); });
+      var pool = t.type === 'Suite' ? PHOTOS.suite : PHOTOS.room;
+      ROOMS.push({
+        id: slug(name) + '-' + slug(t.type) + (ti === 2 && stars === 3 ? '-twin' : ''),
+        hotel: name,
+        stars: stars,
+        city: city,
+        area: area,
+        address: address,
+        type: t.type,
+        bed: t.bed,
+        guests: t.guests,
+        size: t.size,
+        price: price,
+        taxes: String(gstFor(price)),
+        freeCancellation: t.freeCancellation,
+        amenities: amenities,
+        available: true,
+        images: [
+          pool[(hi + ti) % pool.length],
+          PHOTOS.room[(hi * 2 + ti + 3) % PHOTOS.room.length],
+          PHOTOS.hotel[(hi + ti) % PHOTOS.hotel.length]
+        ]
+      });
+    });
+  });
+
+  var CITIES = ['Delhi', 'Noida', 'Ghaziabad'];
+
+  // Default order: one room per hotel at a time, alternating cities, so the
+  // first screen shows a mix of hotels and locations.
+  (function interleave() {
+    var queues = CITIES.map(function (c) {
+      return ROOMS.filter(function (r) { return r.city === c; })
+        .map(function (r, i) { return { r: r, tier: i % 3 }; }) // each hotel has 3 rooms in a row
+        .sort(function (a, b) { return a.tier - b.tier; })
+        .map(function (x) { return x.r; });
+    });
+    var ordered = [];
+    while (queues.some(function (q) { return q.length; })) {
+      queues.forEach(function (q) { if (q.length) ordered.push(q.shift()); });
+    }
+    ROOMS.length = 0;
+    Array.prototype.push.apply(ROOMS, ordered);
+  })();
+
+  var ROOM_TYPES = ['Standard', 'Deluxe', 'Executive', 'Suite'];
+
   var AMENITIES = {
-    wifi: 'Wi-Fi',
-    ac: 'AC',
-    food: 'Food Included'
+    wifi: 'Free Wi-Fi',
+    breakfast: 'Breakfast included',
+    pool: 'Swimming pool',
+    parking: 'Free parking'
   };
 
   var COUPONS = {
     WELCOME500: { code: 'WELCOME500', amount: 500, label: '₹500 off your first booking' }
   };
 
-  var api = { ROOMS: ROOMS, AMENITIES: AMENITIES, COUPONS: COUPONS };
+  var api = { ROOMS: ROOMS, HOTELS_COUNT: HOTELS.length, CITIES: CITIES, ROOM_TYPES: ROOM_TYPES, AMENITIES: AMENITIES, COUPONS: COUPONS };
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   } else {

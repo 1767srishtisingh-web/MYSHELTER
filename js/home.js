@@ -1,5 +1,5 @@
 /*
- * MYSHELTER — Explore page: search, filters, sort, cards and carousels.
+ * MYSHELTER — Rooms page: search, filters, sort, cards and carousels.
  */
 (function () {
   'use strict';
@@ -12,49 +12,61 @@
   var esc = Core.escapeHTML;
 
   var ROOMS = Data.ROOMS;
-  var CITIES = Array.from(new Set(ROOMS.map(function (r) { return r.city; }))).sort();
+  var PAGE_SIZE = 24;
+  var AREAS = ['Connaught Place', 'Aerocity', 'Sector 18', 'Greater Noida', 'Kaushambi', 'Vaishali'];
 
   var state = Core.readFilters(window.location.search);
 
-  // Bug 10 fix: every card keeps its OWN photo index, keyed by room id.
-  // (Previously one shared global index moved every card at once.)
-  var slideIndex = new Map();
+  // which photo the carousels are showing
+  var currentSlide = 0;
+
+  // rooms matching the current filters, and how many are on screen
+  var currentList = [];
+  var shown = 0;
 
   var els = {
     q: document.getElementById('q'),
     searchForm: document.getElementById('search-form'),
-    cityChips: document.getElementById('city-chips'),
+    areaChips: document.getElementById('area-chips'),
+    cityFilter: document.getElementById('city-filter'),
     typeFilter: document.getElementById('type-filter'),
-    genderFilter: document.getElementById('gender-filter'),
-    amenityFilter: document.getElementById('amenity-filter'),
+    optionFilter: document.getElementById('option-filter'),
     sort: document.getElementById('sort'),
     grid: document.getElementById('grid'),
     count: document.getElementById('results-count'),
-    clear: document.getElementById('clear-filters')
+    clear: document.getElementById('clear-filters'),
+    more: document.getElementById('show-more')
   };
 
   /* ---------- static bits ---------- */
 
   function renderStats() {
-    var minRent = Math.min.apply(null, ROOMS.map(function (r) { return r.rent; }));
+    var minPrice = Math.min.apply(null, ROOMS.map(function (r) { return r.price; }));
     var set = function (k, v) { var el = document.querySelector('[data-stat="' + k + '"]'); if (el) el.textContent = v; };
     set('rooms', String(ROOMS.length));
-    set('cities', String(CITIES.length));
-    set('from', Core.formatINR(minRent));
+    set('hotels', String(Data.HOTELS_COUNT));
+    set('from', Core.formatINR(minPrice));
   }
 
-  function renderCityChips() {
-    els.cityChips.innerHTML = CITIES.map(function (c) {
-      return '<button type="button" class="chip" data-city="' + esc(c) + '" aria-pressed="false">' + I.pin + esc(c) + '</button>';
+  function renderAreaChips() {
+    els.areaChips.innerHTML = AREAS.map(function (a) {
+      return '<button type="button" class="chip" data-area="' + esc(a) + '" aria-pressed="false">' + I.pin + esc(a) + '</button>';
     }).join('');
   }
 
-  function renderAmenityFilters() {
-    var html = Object.keys(Data.AMENITIES).map(function (key) {
-      return '<label class="check-pill"><input type="checkbox" value="' + key + '" name="amenity">' +
-        '<span class="tick">' + I.check + '</span>' + esc(Data.AMENITIES[key]) + '</label>';
+  var OPTIONS = [
+    { value: 'free', label: 'Free cancellation' },
+    { value: 'breakfast', label: Data.AMENITIES.breakfast },
+    { value: 'pool', label: Data.AMENITIES.pool },
+    { value: 'parking', label: Data.AMENITIES.parking }
+  ];
+
+  function renderOptionFilters() {
+    var html = OPTIONS.map(function (o) {
+      return '<label class="check-pill"><input type="checkbox" value="' + o.value + '" name="option">' +
+        '<span class="tick">' + I.check + '</span>' + esc(o.label) + '</label>';
     }).join('');
-    els.amenityFilter.insertAdjacentHTML('beforeend', html);
+    els.optionFilter.insertAdjacentHTML('beforeend', html);
   }
 
   /* ---------- controls <-> state ---------- */
@@ -62,28 +74,28 @@
   function syncControls() {
     els.q.value = state.query;
     els.sort.value = state.sort;
+    els.cityFilter.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.city === state.city));
+    });
     els.typeFilter.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.type === state.type));
     });
-    els.genderFilter.querySelectorAll('button').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.gender === state.gender));
-    });
-    els.amenityFilter.querySelectorAll('input').forEach(function (i) {
-      i.checked = state.amenities.indexOf(i.value) !== -1;
+    els.optionFilter.querySelectorAll('input').forEach(function (i) {
+      i.checked = i.value === 'free' ? state.freeCancellation : state.amenities.indexOf(i.value) !== -1;
     });
     var q = state.query.trim().toLowerCase();
-    els.cityChips.querySelectorAll('button').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(q === b.dataset.city.toLowerCase()));
+    els.areaChips.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(q === b.dataset.area.toLowerCase()));
     });
   }
 
   function isFiltered() {
-    return !!(state.query || state.type !== 'all' || state.gender !== 'any' || state.amenities.length || state.sort !== 'recommended');
+    return !!(state.query || state.city !== 'all' || state.type !== 'all' || state.freeCancellation ||
+      state.amenities.length || state.sort !== 'recommended');
   }
 
   function update(patch) {
     Object.keys(patch).forEach(function (k) { state[k] = patch[k]; });
-    // Keep filters in the URL so a refresh or shared link restores the view.
     var url = window.location.pathname + Core.writeFilters(state) + window.location.hash;
     try { window.history.replaceState(null, '', url); } catch (e) { /* file:// in some browsers */ }
     syncControls();
@@ -92,51 +104,48 @@
 
   /* ---------- cards ---------- */
 
-  var GENDER_TAG = {
-    Girls: { cls: 'tag--girls', icon: I.venus, label: 'Girls only' },
-    Boys: { cls: 'tag--boys', icon: I.mars, label: 'Boys only' },
-    Any: { cls: 'tag--any', icon: I.users, label: 'Anyone' }
-  };
-  var AMENITY_ICON = { wifi: I.wifi, ac: I.ac, food: I.food };
+  var AMENITY_ICON = { breakfast: I.food, pool: I.pool, parking: I.parking };
 
   function cardHTML(room, position) {
-    var g = GENDER_TAG[room.gender] || GENDER_TAG.Any;
     var n = room.images.length;
     var eager = position < 3;
+    var label = room.hotel + ', ' + room.type + ' room';
     var imgs = room.images.map(function (src, k) {
-      return '<img src="' + esc(src) + '" alt="' + esc(room.title) + ' — photo ' + (k + 1) + ' of ' + n + '"' +
+      return '<img src="' + esc(src) + '" alt="' + esc(label) + ' — photo ' + (k + 1) + ' of ' + n + '"' +
         ' loading="' + (eager && k === 0 ? 'eager' : 'lazy') + '" decoding="async" width="900" height="675"' +
         (k === 0 ? '' : ' aria-hidden="true"') + '>';
     }).join('');
     var dots = room.images.map(function (_, k) {
       return '<button type="button" data-dot="' + k + '" aria-label="Show photo ' + (k + 1) + '"' + (k === 0 ? ' aria-current="true"' : '') + '></button>';
     }).join('');
-    var amenities = room.amenities.map(function (a) {
+    var amenities = room.amenities.filter(function (a) { return AMENITY_ICON[a]; }).map(function (a) {
       return '<span class="meta">' + AMENITY_ICON[a] + esc(Data.AMENITIES[a]) + '</span>';
     }).join('');
 
     return '' +
       '<article class="card glass glow" data-room-id="' + esc(room.id) + '" aria-labelledby="t-' + esc(room.id) + '">' +
-        '<div class="carousel" role="group" aria-roledescription="carousel" aria-label="Photos of ' + esc(room.title) + '" tabindex="0">' +
+        '<div class="carousel" role="group" aria-roledescription="carousel" aria-label="Photos of ' + esc(label) + '" tabindex="0">' +
           '<div class="carousel-track">' + imgs + '</div>' +
-          '<div class="tag-row"><span class="tag ' + g.cls + '">' + g.icon + g.label + '</span>' +
-            '<span class="tag tag--rating">' + I.star + room.rating.toFixed(1) + ' <span class="sr-only">out of 5 from</span>(' + room.reviews + ')</span></div>' +
+          '<div class="tag-row"><span class="tag tag--stars">' + I.star + room.stars + '-star</span>' +
+            (room.freeCancellation ? '<span class="tag tag--free">' + I.check + 'Free cancellation</span>' : '') + '</div>' +
           (n > 1 ?
             '<button type="button" class="icon-btn icon-btn--clear nav-arrow prev" data-step="-1" aria-label="Previous photo">' + I.chevL + '</button>' +
             '<button type="button" class="icon-btn icon-btn--clear nav-arrow next" data-step="1" aria-label="Next photo">' + I.chevR + '</button>' +
             '<div class="dots">' + dots + '</div>' : '') +
         '</div>' +
         '<div class="card-body">' +
-          '<h3 class="card-title" id="t-' + esc(room.id) + '">' + esc(room.title) + ' – ' + esc(room.city) + '</h3>' +
-          '<p class="card-loc">' + I.pin + '<span>' + esc(room.locality) + ', ' + esc(room.city) + '</span></p>' +
+          '<div>' +
+            '<h3 class="card-title" id="t-' + esc(room.id) + '">' + esc(room.hotel) + '</h3>' +
+            '<p class="card-sub">' + esc(room.type) + ' Room · ' + esc(room.bed) + '</p>' +
+          '</div>' +
+          '<p class="card-loc">' + I.pin + '<span>' + esc(room.area) + ', ' + esc(room.city) + '</span></p>' +
           '<div class="meta-row"><span class="meta meta--type">' + I.bed + esc(room.type) + '</span>' +
-            '<span class="meta">' + esc(room.category) + '</span>' + amenities + '</div>' +
-          '<p class="card-note">' + esc(room.highlight) + '</p>' +
+            '<span class="meta">' + I.users + room.guests + ' guests</span>' +
+            '<span class="meta">' + I.size + room.size + ' m²</span>' + amenities + '</div>' +
           '<div class="card-foot">' +
-            '<div class="price"><strong>' + Core.formatINR(room.rent) + '</strong><span>/month</span>' +
-              '<small>Deposit ' + Core.formatINR(room.deposit) + '</small></div>' +
-            // Bug 3 fix: the button carries the room's stable id, never a list index.
-            '<a class="btn btn--violet btn--sm" href="checkout.html?room=' + encodeURIComponent(room.id) + '" data-book="' + esc(room.id) + '">Book now</a>' +
+            '<div class="price"><strong>' + Core.formatINR(room.price) + '</strong><span>/night</span>' +
+              '<small>+ ' + Core.formatINR(room.taxes) + ' taxes</small></div>' +
+            '<button type="button" class="btn btn--violet btn--sm" data-index="' + (position + 1) + '">Book now</button>' +
           '</div>' +
         '</div>' +
       '</article>';
@@ -145,42 +154,52 @@
   function emptyHTML() {
     return '<div class="empty glass" role="status">' +
       '<span class="orb">' + I.search + '</span>' +
-      '<h3>No stays match those filters</h3>' +
-      '<p>Try another area, remove an amenity, or switch the room type to “All”.</p>' +
-      '<div class="actions"><button type="button" class="btn btn--violet btn--sm" data-action="reset">Clear all filters</button></div>' +
+      '<h3>No rooms match these filters</h3>' +
+      '<p>Change the city, room type or options.</p>' +
+      '<div class="actions"><button type="button" class="btn btn--violet btn--sm" data-action="reset">Clear filters</button></div>' +
       '</div>';
   }
 
   function describeCount(n) {
-    var parts = [n + (n === 1 ? ' stay' : ' stays') + ' found'];
-    if (state.query) parts.push('for “' + state.query + '”');
-    return parts.join(' ');
+    var text = n + (n === 1 ? ' room' : ' rooms');
+    if (state.query) text += ' for “' + state.query + '”';
+    return text;
+  }
+
+  function appendCards(count) {
+    var start = shown;
+    var slice = currentList.slice(start, start + count);
+    els.grid.insertAdjacentHTML('beforeend', slice.map(function (room, k) { return cardHTML(room, start + k); }).join(''));
+    var cards = els.grid.querySelectorAll('.card');
+    for (var i = start; i < cards.length; i++) {
+      cards[i].style.setProperty('--i', String(Math.min(i - start, 8)));
+      wireCard(cards[i]);
+    }
+    shown = start + slice.length;
+    var left = currentList.length - shown;
+    els.more.hidden = left <= 0;
+    els.more.textContent = 'Show more rooms (' + left + ')';
   }
 
   function render() {
-    var list = Core.sortRooms(Core.filterRooms(ROOMS, state), state.sort);
-    els.count.textContent = describeCount(list.length);
+    currentList = Core.sortRooms(Core.filterRooms(ROOMS, state), state.sort);
+    shown = 0;
+    els.count.textContent = describeCount(currentList.length);
     els.clear.hidden = !isFiltered();
-    els.grid.setAttribute('aria-busy', 'true');
-    if (!list.length) {
+    els.grid.innerHTML = '';
+    if (!currentList.length) {
       els.grid.innerHTML = emptyHTML();
-    } else {
-      els.grid.innerHTML = list.map(cardHTML).join('');
-      els.grid.querySelectorAll('.card').forEach(function (card, i) {
-        card.style.setProperty('--i', String(Math.min(i, 8)));
-        wireCard(card);
-      });
+      els.more.hidden = true;
+      return;
     }
-    els.grid.removeAttribute('aria-busy');
+    appendCards(PAGE_SIZE);
   }
 
-  /* ---------- carousel (per card) ---------- */
+  /* ---------- carousel ---------- */
 
   function showSlide(card, index) {
-    var id = card.dataset.roomId;
     var imgs = card.querySelectorAll('.carousel-track img');
-    var i = Core.stepIndex(index, imgs.length, 0);
-    slideIndex.set(id, i);
+    var i = ((index % imgs.length) + imgs.length) % imgs.length;
     card.querySelector('.carousel-track').style.transform = 'translateX(' + (-100 * i) + '%)';
     imgs.forEach(function (img, k) {
       if (k === i) { img.removeAttribute('aria-hidden'); img.loading = 'eager'; }
@@ -193,9 +212,11 @@
   }
 
   function step(card, delta) {
-    var id = card.dataset.roomId;
     var len = card.querySelectorAll('.carousel-track img').length;
-    showSlide(card, Core.stepIndex(slideIndex.get(id) || 0, len, delta));
+    currentSlide = ((currentSlide + delta) % len + len) % len;
+    els.grid.querySelectorAll('.card').forEach(function (c) {
+      showSlide(c, currentSlide);
+    });
   }
 
   function wireCard(card) {
@@ -213,8 +234,7 @@
         img.addEventListener('error', function () { setTimeout(done, 0); });
       }
     });
-    // Restore this card's own position after a re-render (e.g. changing sort).
-    showSlide(card, slideIndex.get(card.dataset.roomId) || 0);
+    showSlide(card, currentSlide);
 
     // Swipe on touch screens
     var startX = null;
@@ -245,14 +265,19 @@
     if (!card) return;
 
     if (target.dataset.step) { step(card, Number(target.dataset.step)); return; }
-    if (target.dataset.dot) { showSlide(card, Number(target.dataset.dot)); return; }
+    if (target.dataset.dot) { step(card, Number(target.dataset.dot) - currentSlide); return; }
 
-    if (target.dataset.book) {
-      // Bug 1 fix: persist the chosen room so checkout survives a refresh.
-      // The URL also carries ?room=<id>, so either source restores it.
-      Store.setSelectedRoom(target.dataset.book);
+    if (target.dataset.index) {
+      bookRoom(currentList[Number(target.dataset.index)]);
     }
   });
+
+  function bookRoom(room) {
+    if (!room) return;
+    window.location.href = 'checkout.html?room=' + encodeURIComponent(room.id);
+  }
+
+  els.more.addEventListener('click', function () { appendCards(PAGE_SIZE); });
 
   els.searchForm.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -266,11 +291,16 @@
     typing = setTimeout(function () { update({ query: els.q.value.trim().slice(0, 80) }); }, 220);
   });
 
-  els.cityChips.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-city]');
+  els.areaChips.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-area]');
     if (!b) return;
     var on = b.getAttribute('aria-pressed') === 'true';
-    update({ query: on ? '' : b.dataset.city });
+    update({ query: on ? '' : b.dataset.area });
+  });
+
+  els.cityFilter.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-city]');
+    if (b) update({ city: b.dataset.city });
   });
 
   els.typeFilter.addEventListener('click', function (e) {
@@ -278,25 +308,22 @@
     if (b) update({ type: b.dataset.type });
   });
 
-  els.genderFilter.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-gender]');
-    if (b) update({ gender: b.dataset.gender });
-  });
-
-  els.amenityFilter.addEventListener('change', function () {
-    var picked = Array.prototype.map.call(els.amenityFilter.querySelectorAll('input:checked'), function (i) { return i.value; });
-    update({ amenities: picked });
+  els.optionFilter.addEventListener('change', function () {
+    var picked = Array.prototype.map.call(els.optionFilter.querySelectorAll('input:checked'), function (i) { return i.value; });
+    update({
+      freeCancellation: picked.indexOf('free') !== -1,
+      amenities: picked.filter(function (v) { return v !== 'free'; })
+    });
   });
 
   els.sort.addEventListener('change', function () { update({ sort: els.sort.value }); });
 
   function resetFilters() {
-    update({ query: '', type: 'all', gender: 'any', amenities: [], sort: 'recommended' });
+    update({ query: '', city: 'all', type: 'all', freeCancellation: false, amenities: [], sort: 'recommended' });
     UI.toast('Filters cleared');
   }
   els.clear.addEventListener('click', resetFilters);
 
-  // Back/forward restores from the URL
   window.addEventListener('popstate', function () {
     state = Core.readFilters(window.location.search);
     syncControls();
@@ -305,8 +332,8 @@
 
   /* ---------- boot ---------- */
   renderStats();
-  renderCityChips();
-  renderAmenityFilters();
+  renderAreaChips();
+  renderOptionFilters();
   syncControls();
   render();
   UI.storageNotice(document.querySelector('.results'));

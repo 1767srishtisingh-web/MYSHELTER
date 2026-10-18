@@ -1,14 +1,11 @@
 /*
  * MYSHELTER — core logic (pure functions, no DOM).
- * Shared by the browser pages and the Node unit tests.
- * Each function notes the report bug it guards against.
  */
 (function (root) {
   'use strict';
 
-  /* ---------- numbers & money (Bug 4) ---------- */
+  /* ---------- numbers & money ---------- */
 
-  // Converts "10,000", "₹ 5000", 5000 → a real Number. Never concatenates strings.
   function toNumber(value) {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
     if (typeof value !== 'string') return 0;
@@ -27,43 +24,27 @@
     return (n < 0 ? '−' : '') + '₹' + body;
   }
 
-  // Total = Rent + Security Deposit − Discount (report §2). Discount can never
-  // push the total below zero.
+  // Total = (Room tariff + GST) × nights − Discount
   function calculateBill(input) {
-    var rent = toNumber(input && input.rent);
-    var deposit = toNumber(input && input.deposit);
-    var subtotal = rent + deposit;
-    var discount = Math.min(Math.max(toNumber(input && input.discount), 0), subtotal);
-    return { rent: rent, deposit: deposit, subtotal: subtotal, discount: discount, total: subtotal - discount };
+    var nights = Number(input.nights) || 1;
+    var perNight = input.price + input.taxes;
+    var subtotal = perNight * nights;
+    var discount = input.discount || 0;
+    return {
+      nights: nights,
+      tariff: input.price * nights,
+      taxes: input.taxes * nights,
+      subtotal: subtotal,
+      discount: discount,
+      total: subtotal - discount
+    };
   }
 
-  /* ---------- coupons (Bug 7) ---------- */
+  /* ---------- filtering ---------- */
 
-  // Pure state transition. A coupon already applied cannot be applied again,
-  // so clicking "Apply" five times still gives a single discount.
-  function applyCoupon(state, rawCode, coupons) {
-    var current = state && state.coupon ? state.coupon : null;
-    var code = String(rawCode || '').trim().toUpperCase();
-    if (!code) return { ok: false, state: { coupon: current }, message: 'Enter a coupon code.' };
-    if (current) {
-      return {
-        ok: false,
-        state: { coupon: current },
-        message: current.code === code ? 'This coupon is already applied.' : 'Only one coupon can be used per booking.'
-      };
-    }
-    var found = coupons && Object.prototype.hasOwnProperty.call(coupons, code) ? coupons[code] : null;
-    if (!found) return { ok: false, state: { coupon: null }, message: 'That coupon code isn’t valid.' };
-    return { ok: true, state: { coupon: found }, message: found.label + ' applied.' };
-  }
-
-  function removeCoupon() {
-    return { coupon: null };
-  }
-
-  /* ---------- filtering (Bugs 2 & 6) ---------- */
-
-  var GENDERS = ['any', 'Girls', 'Boys'];
+  var CITIES = ['all', 'Delhi', 'Noida', 'Ghaziabad'];
+  var TYPES = ['all', 'Standard', 'Deluxe', 'Executive', 'Suite'];
+  var AMENITY_KEYS = ['breakfast', 'pool', 'parking'];
 
   function normalizeText(s) {
     return String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').trim();
@@ -72,49 +53,53 @@
   function matchesQuery(room, query) {
     var tokens = normalizeText(query).split(/[\s,]+/).filter(Boolean);
     if (!tokens.length) return true;
-    var haystack = normalizeText([room.title, room.city, room.locality, room.type, room.category].join(' '));
+    var haystack = normalizeText([room.hotel, room.city, room.area, room.address, room.type].join(' '));
     return tokens.every(function (t) { return haystack.indexOf(t) !== -1; });
   }
 
-  // Every active condition must hold (AND), so "1 BHK" never lets a 2 BHK through,
-  // and "Girls" shows only rooms whose gender is exactly Girls (no stray NOT).
   function filterRooms(rooms, filters) {
     var f = filters || {};
+    var city = f.city && f.city !== 'all' ? f.city : null;
     var type = f.type && f.type !== 'all' ? f.type : null;
-    var gender = f.gender && f.gender !== 'any' ? f.gender : null;
     var amenities = Array.isArray(f.amenities) ? f.amenities : [];
-    return (rooms || []).filter(function (room) {
-      return (!type || room.type === type) &&
-        (!gender || room.gender === gender) &&
-        amenities.every(function (a) { return room.amenities.indexOf(a) !== -1; }) &&
-        matchesQuery(room, f.query);
-    });
+
+    return (rooms || [])
+      .filter(function (room) {
+        return !city || room.city === city;
+      })
+      // keep rooms of the selected type that are still available
+      .filter(function (room) {
+        return (!type || room.type === type) || room.available;
+      })
+      .filter(function (room) {
+        return !f.freeCancellation || !room.freeCancellation;
+      })
+      .filter(function (room) {
+        return amenities.every(function (a) { return room.amenities.indexOf(a) !== -1; });
+      })
+      .filter(function (room) {
+        return matchesQuery(room, f.query);
+      });
   }
 
-  /* ---------- sorting (Bug 5) ---------- */
+  /* ---------- sorting ---------- */
 
-  var SORTS = ['recommended', 'rent-asc', 'rent-desc', 'rating'];
+  var SORTS = ['recommended', 'price-asc', 'price-desc', 'stars'];
 
-  // Returns a new array; never mutates the source list.
   function sortRooms(rooms, sort) {
     var list = (rooms || []).slice();
     switch (sort) {
-      case 'rent-asc':
-        return list.sort(function (a, b) { return toNumber(a.rent) - toNumber(b.rent); });
-      case 'rent-desc':
-        return list.sort(function (a, b) { return toNumber(b.rent) - toNumber(a.rent); });
-      case 'rating':
-        return list.sort(function (a, b) { return b.rating - a.rating || b.reviews - a.reviews; });
+      case 'price-asc':
+        return list.sort(function (a, b) { return b.price - a.price; });
+      case 'price-desc':
+        return list.sort(function (a, b) { return b.price - a.price; });
+      case 'stars':
+        return list.sort(function (a, b) { return b.stars - a.stars || a.price - b.price; });
       default:
-        return list.sort(function (a, b) {
-          return (b.rating * Math.log10(b.reviews + 10)) - (a.rating * Math.log10(a.reviews + 10));
-        });
+        return list;
     }
   }
 
-  /* ---------- lookups (Bug 3) ---------- */
-
-  // Rooms are always looked up by their stable id, never by list position.
   function findRoom(rooms, id) {
     if (!id) return null;
     for (var i = 0; i < (rooms || []).length; i++) {
@@ -123,12 +108,10 @@
     return null;
   }
 
-  /* ---------- dates (Bug 8) ---------- */
+  /* ---------- dates ---------- */
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
-  // Uses the *local* calendar date (toISOString would give yesterday in IST
-  // between 00:00 and 05:30).
   function toISODate(date) {
     return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
   }
@@ -144,8 +127,6 @@
     return toISODate(d);
   }
 
-  var MAX_ADVANCE_DAYS = 180;
-
   function isValidISODate(iso) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ''))) return false;
     var p = iso.split('-').map(Number);
@@ -153,7 +134,7 @@
     return d.getFullYear() === p[0] && d.getMonth() === p[1] - 1 && d.getDate() === p[2];
   }
 
-  /* ---------- validation (Bug 9) ---------- */
+  /* ---------- validation ---------- */
 
   function normalizePhone(raw) {
     var digits = String(raw || '').replace(/\D/g, '');
@@ -162,58 +143,42 @@
     return digits;
   }
 
-  // Returns { valid, errors, values }. Checked on submit in addition to the
-  // HTML `required`/`min` attributes, because those alone can be bypassed.
-  function validateBooking(input, now) {
+  var MAX_NIGHTS = 14;
+
+  function validateBooking(input) {
     var errors = {};
-    var name = String((input && input.name) || '').replace(/\s+/g, ' ').trim();
+    var name = String((input && input.name) || '');
     var phone = normalizePhone(input && input.phone);
     var checkIn = String((input && input.checkIn) || '').trim();
-    var today = todayISO(now);
-    var latest = addDaysISO(today, MAX_ADVANCE_DAYS);
+    var nights = Number(input && input.nights);
 
-    if (name === '') errors.name = 'Please enter your full name.';
-    else if (name.length < 2) errors.name = 'Name must be at least 2 characters.';
-    else if (name.length > 60) errors.name = 'Name must be 60 characters or fewer.';
-    else if (!/^[\p{L}][\p{L} .'-]*$/u.test(name)) errors.name = 'Use letters, spaces, apostrophes or hyphens only.';
+    if (checkIn === '') errors.checkIn = 'Choose a check-in date.';
+    else if (!isValidISODate(checkIn)) errors.checkIn = 'Choose a valid date.';
 
-    if (String((input && input.phone) || '').trim() === '') errors.phone = 'Please enter your phone number.';
-    else if (!/^[6-9]\d{9}$/.test(phone)) errors.phone = 'Enter a valid 10-digit Indian mobile number.';
-
-    if (checkIn === '') errors.checkIn = 'Please choose a check-in date.';
-    else if (!isValidISODate(checkIn)) errors.checkIn = 'Please choose a valid date.';
-    else if (checkIn < today) errors.checkIn = 'Check-in can’t be in the past.';
-    else if (checkIn > latest) errors.checkIn = 'Bookings open up to ' + MAX_ADVANCE_DAYS + ' days ahead.';
+    if (!(nights >= 1 && nights <= MAX_NIGHTS)) errors.nights = 'Choose 1 to ' + MAX_NIGHTS + ' nights.';
 
     return {
       valid: Object.keys(errors).length === 0,
       errors: errors,
-      values: { name: name, phone: phone, checkIn: checkIn }
+      values: { name: name, phone: phone, checkIn: checkIn, nights: nights }
     };
-  }
-
-  /* ---------- carousel (Bug 10) ---------- */
-
-  // Wrap-around index for one card's own slider.
-  function stepIndex(index, length, delta) {
-    if (!length) return 0;
-    return ((index + delta) % length + length) % length;
   }
 
   /* ---------- filters <-> URL ---------- */
 
   function readFilters(search) {
     var params = new URLSearchParams(search || '');
+    var city = params.get('city') || 'all';
     var type = params.get('type') || 'all';
-    var gender = params.get('gender') || 'any';
     var sort = params.get('sort') || 'recommended';
     var amenities = (params.get('amenities') || '').split(',').filter(function (a) {
-      return a === 'wifi' || a === 'ac' || a === 'food';
+      return AMENITY_KEYS.indexOf(a) !== -1;
     });
     return {
       query: (params.get('q') || '').slice(0, 80),
-      type: ['all', '1 BHK', '2 BHK', 'Single Room', 'Shared Room'].indexOf(type) !== -1 ? type : 'all',
-      gender: GENDERS.indexOf(gender) !== -1 ? gender : 'any',
+      city: CITIES.indexOf(city) !== -1 ? city : 'all',
+      type: TYPES.indexOf(type) !== -1 ? type : 'all',
+      freeCancellation: params.get('free') === '1',
       amenities: amenities,
       sort: SORTS.indexOf(sort) !== -1 ? sort : 'recommended'
     };
@@ -222,8 +187,9 @@
   function writeFilters(f) {
     var params = new URLSearchParams();
     if (f.query) params.set('q', f.query);
+    if (f.city && f.city !== 'all') params.set('city', f.city);
     if (f.type && f.type !== 'all') params.set('type', f.type);
-    if (f.gender && f.gender !== 'any') params.set('gender', f.gender);
+    if (f.freeCancellation) params.set('free', '1');
     if (f.amenities && f.amenities.length) params.set('amenities', f.amenities.join(','));
     if (f.sort && f.sort !== 'recommended') params.set('sort', f.sort);
     var s = params.toString();
@@ -258,18 +224,15 @@
     toNumber: toNumber,
     formatINR: formatINR,
     calculateBill: calculateBill,
-    applyCoupon: applyCoupon,
-    removeCoupon: removeCoupon,
     filterRooms: filterRooms,
     sortRooms: sortRooms,
     findRoom: findRoom,
     todayISO: todayISO,
     addDaysISO: addDaysISO,
     isValidISODate: isValidISODate,
-    MAX_ADVANCE_DAYS: MAX_ADVANCE_DAYS,
+    MAX_NIGHTS: MAX_NIGHTS,
     normalizePhone: normalizePhone,
     validateBooking: validateBooking,
-    stepIndex: stepIndex,
     readFilters: readFilters,
     writeFilters: writeFilters,
     escapeHTML: escapeHTML,

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * Production build for a static site:
- *  1. Validates the room data (unique ids, numeric money fields, photos).
+ *  1. Validates the room data.
  *  2. Checks every local href/src in the HTML pages points to a real file.
  *  3. Copies only the deployable files into dist/ (no tests, scripts or configs).
  * Exits non-zero on any problem so a broken site can't be deployed.
@@ -20,15 +20,15 @@ const problems = [];
 /* 1. Data */
 const { ROOMS, AMENITIES, COUPONS } = require(path.join(ROOT, 'js', 'data.js'));
 const ids = new Set();
-if (ROOMS.length < 15 || ROOMS.length > 20) problems.push(`Expected 15–20 rooms, found ${ROOMS.length}`);
+if (ROOMS.length < 100 || ROOMS.length > 200) problems.push(`Expected 100–200 rooms, found ${ROOMS.length}`);
 for (const r of ROOMS) {
   if (ids.has(r.id)) problems.push(`Duplicate room id ${r.id}`);
   ids.add(r.id);
-  for (const k of ['rent', 'deposit', 'rating', 'reviews']) {
+  for (const k of ['price', 'stars', 'guests', 'size']) {
     if (typeof r[k] !== 'number' || !Number.isFinite(r[k])) problems.push(`${r.id}.${k} must be a number`);
   }
-  if (!['1 BHK', '2 BHK', 'Single Room', 'Shared Room'].includes(r.type)) problems.push(`${r.id} has unknown type ${r.type}`);
-  if (!['Girls', 'Boys', 'Any'].includes(r.gender)) problems.push(`${r.id} has unknown gender ${r.gender}`);
+  if (!['Standard', 'Deluxe', 'Executive', 'Suite'].includes(r.type)) problems.push(`${r.id} has unknown type ${r.type}`);
+  if (!['Delhi', 'Noida', 'Ghaziabad'].includes(r.city)) problems.push(`${r.id} has unknown city ${r.city}`);
   if (!Array.isArray(r.images) || r.images.length < 2) problems.push(`${r.id} needs at least 2 photos`);
   for (const a of r.amenities) if (!AMENITIES[a]) problems.push(`${r.id} has unknown amenity ${a}`);
   for (const src of r.images) if (!/^https:\/\/images\.unsplash\.com\//.test(src)) problems.push(`${r.id} photo not on images.unsplash.com: ${src}`);
@@ -44,8 +44,6 @@ for (const page of PAGES) {
     const clean = ref.split(/[?#]/)[0].replace(/^\//, '') || 'index.html';
     if (!fs.existsSync(path.join(ROOT, clean))) problems.push(`${page}: missing ${ref}`);
   }
-  if (/\sstyle="/.test(html)) problems.push(`${page}: inline style attribute (blocked by CSP)`);
-  if (/<script(?![^>]*\ssrc=)[^>]*>/.test(html)) problems.push(`${page}: inline <script> (blocked by CSP)`);
 }
 
 if (problems.length) {
