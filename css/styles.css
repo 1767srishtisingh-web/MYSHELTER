@@ -1965,6 +1965,539 @@ dialog.sheet::backdrop {
   color: var(--muted);
 }
 
+/* ---------- New Enhancements (Dropdown, Mobile Header, Checkout Flow, Success Animation) ---------- */
+
+/* 1. Sort Dropdown No-Browser-Highlight & Theme Polish */
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dropdown-trigger {
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+}
+
+.dropdown-trigger:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--olive-3), 0 2px 8px rgba(92, 107, 79, 0.15) !important;
+}
+
+.dropdown-option {
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+  user-select: none;
+}
+
+.dropdown-option:focus-visible {
+  outline: none !important;
+  background: rgba(70, 89, 64, 0.08);
+}
+
+.dropdown-option.is-selected {
+  background: rgba(70, 89, 64, 0.12) !important;
+  color: var(--olive-dark) !important;
+  font-weight: 600;
+}
+
+.dropdown-option.is-selected .option-check {
+  opacity: 1 !important;
+  color: var(--olive-dark) !important;
+}
+
+/* 2. Mobile Header Single-Row & Account Menu */
+.desktop-only { display: inline-flex; }
+.mobile-only { display: none; }
+
+@media (max-width: 600px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: inline-block !important; position: relative; }
+
+  .site-header .nav {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+  .brand {
+    font-size: 15px !important;
+    letter-spacing: 2px !important;
+  }
+  .brand-text {
+    letter-spacing: 2px !important;
+  }
+  .nav-links {
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+  }
+  .nav-link {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    letter-spacing: 0.2px !important;
+  }
+  .badge {
+    min-width: 18px !important;
+    height: 18px !important;
+    font-size: 10px !important;
+    padding: 0 4px !important;
+    margin-left: 3px !important;
+  }
+
+  .mobile-user-menu {
+    position: relative;
+    display: inline-flex;
+  }
+  .mobile-user-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px 4px 5px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: var(--cast-sm);
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    transition: all var(--t-fast) var(--ease);
+  }
+  .mobile-user-trigger:hover,
+  .mobile-user-trigger:focus-visible {
+    border-color: var(--olive-2);
+    box-shadow: 0 0 0 2px var(--olive-3);
+  }
+  .mobile-user-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--olive-3);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .mobile-user-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    max-width: 65px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-user-chev {
+    width: 12px;
+    height: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .mobile-user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 190px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: var(--r-md);
+    box-shadow: 0 10px 25px rgba(40, 68, 49, 0.15), 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    z-index: 100;
+    animation: scalePop 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .mobile-menu-profile {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 6px;
+  }
+  .mobile-menu-fullname {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-menu-email {
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-menu-signout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    border: 0;
+    border-radius: var(--r-sm);
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--t-fast) var(--ease);
+  }
+  .mobile-menu-signout:hover,
+  .mobile-menu-signout:focus {
+    background: rgba(196, 90, 90, 0.1);
+  }
+  .mobile-menu-signout svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* 3. Auth Page Hero */
+.auth-hero {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.auth-brand-name {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  letter-spacing: 4px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.auth-tagline {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* 4. Checkout Amenities & Cancellation Badges */
+.amenities-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.amenity-chip {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(70, 89, 64, 0.08);
+  color: var(--olive-dark);
+  font-weight: 500;
+}
+.policy-summary-row {
+  margin-top: 8px;
+}
+.policy-chip {
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.policy-chip svg {
+  width: 13px;
+  height: 13px;
+}
+.policy-chip--free {
+  background: rgba(46, 125, 50, 0.1);
+  color: #2e7d32;
+}
+.policy-chip--std {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--muted);
+}
+
+/* 5. Checkout Step 2: Payment Confirmation */
+.payment-step-wrap {
+  width: 100%;
+  animation: cardIn 0.3s var(--ease) both;
+}
+.payment-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .payment-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.payment-methods-panel {
+  padding: 28px;
+  border-radius: var(--r-lg);
+}
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-block: 20px 24px;
+}
+.payment-method-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.payment-method-card:hover {
+  border-color: var(--olive-2);
+}
+.payment-method-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.payment-method-card .pm-radio-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--t-fast) var(--ease);
+}
+.payment-method-card.is-selected {
+  border-color: var(--olive-3);
+  background: rgba(70, 89, 64, 0.04);
+  box-shadow: 0 2px 8px rgba(70, 89, 64, 0.08);
+}
+.payment-method-card.is-selected .pm-radio-circle {
+  border-color: var(--olive-3);
+  background: var(--olive-3);
+  box-shadow: inset 0 0 0 4px #ffffff;
+}
+.pm-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.pm-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+}
+.pm-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.demo-payment-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--r-sm);
+  background: rgba(70, 89, 64, 0.08);
+  border: 1px dashed rgba(70, 89, 64, 0.3);
+  margin-bottom: 24px;
+}
+.demo-payment-note svg {
+  width: 22px;
+  height: 22px;
+  color: var(--olive-3);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.demo-payment-note strong {
+  font-size: 13.5px;
+  color: var(--olive-dark);
+  display: block;
+  margin-bottom: 2px;
+}
+.demo-payment-note p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.payment-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.payment-summary-card {
+  padding: 24px;
+  border-radius: var(--r-lg);
+}
+.payment-summary-card h2 {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.summary-room-mini {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+.summary-room-mini img {
+  border-radius: var(--r-sm);
+  object-fit: cover;
+}
+.summary-room-mini h3 {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  margin: 0 0 2px 0;
+}
+.pm-sum-meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+}
+.payment-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13.5px;
+  margin-bottom: 16px;
+}
+.pm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pm-row span {
+  color: var(--muted);
+}
+.pm-row strong {
+  color: var(--ink);
+}
+.payment-total-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: var(--r-sm);
+  background: var(--paper-light);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.payment-total-box strong {
+  font-size: 1.3rem;
+  color: var(--olive-dark);
+}
+
+/* 6. Success Modal & Green Tick Animation */
+.success-sheet {
+  max-width: 480px;
+  width: 90vw;
+  padding: 36px 28px;
+  border-radius: var(--r-lg);
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+.success-checkmark-wrap {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 16px;
+}
+.success-checkmark {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 3.5;
+  stroke: var(--olive-dark);
+  stroke-miterlimit: 10;
+  animation: scalePop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 3.5;
+  stroke: var(--olive-3);
+  fill: none;
+  animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+.checkmark-check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: var(--olive-dark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: strokeCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+}
+@keyframes strokeCircle {
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes strokeCheck {
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes scalePop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-block: 6px 20px;
+}
+.success-details-card {
+  background: var(--paper-light);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.success-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.success-row span {
+  color: var(--muted);
+}
+.success-row strong {
+  color: var(--ink);
+}
+.success-row .ref {
+  background: rgba(70, 89, 64, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--olive-dark);
+}
+.success-total {
+  color: var(--olive-dark);
+  font-size: 1.1rem;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -1974,3 +2507,4 @@ dialog.sheet::backdrop {
     transition-duration: 0.01ms !important;
   }
 }
+

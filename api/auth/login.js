@@ -48,7 +48,8 @@ module.exports = async function handler(req, res) {
     if (!user) {
       return res.status(401).json({
         ok: false,
-        error: 'Invalid email or password.'
+        field: 'email',
+        error: 'No account found with this email. Please create an account.'
       });
     }
 
@@ -56,7 +57,8 @@ module.exports = async function handler(req, res) {
     if (!isValid) {
       return res.status(401).json({
         ok: false,
-        error: 'Invalid email or password.'
+        field: 'password',
+        error: 'Incorrect password. Please try again.'
       });
     }
 

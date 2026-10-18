@@ -71,15 +71,12 @@
 
   function syncCustomSort(val) {
     var labelEl = document.getElementById('sort-label');
+    if (labelEl) labelEl.textContent = 'Sort by';
     var options = document.querySelectorAll('.dropdown-option');
     options.forEach(function (opt) {
-      var isMatch = opt.dataset.value === val;
+      var isMatch = Boolean(val && opt.dataset.value === val);
       opt.setAttribute('aria-selected', String(isMatch));
       opt.classList.toggle('is-selected', isMatch);
-      if (isMatch && labelEl) {
-        var textEl = opt.querySelector('.option-text');
-        labelEl.textContent = textEl ? textEl.textContent : opt.textContent.trim();
-      }
     });
   }
 
@@ -104,7 +101,7 @@
 
   function isFiltered() {
     return !!(state.query || state.city !== 'all' || state.type !== 'all' || state.freeCancellation ||
-      state.amenities.length || state.sort !== 'recommended');
+      state.amenities.length || (state.sort && state.sort !== 'recommended'));
   }
 
   var prefDebounceTimer;
@@ -354,7 +351,7 @@
   els.sort.addEventListener('change', function () { update({ sort: els.sort.value }); });
 
   function resetFilters() {
-    update({ query: '', city: 'all', type: 'all', freeCancellation: false, amenities: [], sort: 'recommended' });
+    update({ query: '', city: 'all', type: 'all', freeCancellation: false, amenities: [], sort: '' });
     UI.toast('Filters cleared');
   }
   /* ---------- custom sort dropdown interaction ---------- */
@@ -381,10 +378,15 @@
 
     function selectOption(option) {
       var val = option.dataset.value;
-      if (els.sort.value !== val) {
+      if (els.sort.value === val) {
+        // Toggle off if already selected -> return to default order
+        els.sort.value = '';
+        syncCustomSort('');
+        update({ sort: '' });
+      } else {
         els.sort.value = val;
         syncCustomSort(val);
-        els.sort.dispatchEvent(new Event('change'));
+        update({ sort: val });
       }
       closeDropdown(true);
     }

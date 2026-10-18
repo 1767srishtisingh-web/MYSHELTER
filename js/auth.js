@@ -59,13 +59,17 @@
         storage.removeItem(TOKEN_KEY);
         storage.removeItem(USER_KEY);
       } catch (e) { /* ignore */ }
-      Auth.updateNav();
-      if (root.MyShelterUI && root.MyShelterUI.toast) {
-        root.MyShelterUI.toast('You have been signed out.', 'info');
-      }
-      // If on bookings page or auth page, refresh to reflect logout
-      if (document.body.dataset.page === 'bookings' || document.body.dataset.page === 'auth') {
-        setTimeout(function () { root.location.reload(); }, 400);
+      root.location.replace('auth.html');
+    },
+
+    enforceAuth: function () {
+      var page = document.body ? document.body.dataset.page : '';
+      if (page === 'admin') return;
+      var loggedIn = Auth.isLoggedIn();
+      if (page === 'auth') {
+        if (loggedIn) root.location.replace('index.html');
+      } else {
+        if (!loggedIn) root.location.replace('auth.html');
       }
     },
 
@@ -142,12 +146,29 @@
       if (user && user.name) {
         var firstName = user.name.split(' ')[0];
         authContainer.innerHTML = '' +
-          '<div class="user-pill">' +
+          '<div class="user-pill desktop-only">' +
             '<span class="user-greeting">Hi, ' + escapeHTML(firstName) + '</span>' +
             '<button type="button" class="btn-signout" id="nav-signout-btn" title="Sign out" aria-label="Sign out">' +
               '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>' +
               '<span>Sign out</span>' +
             '</button>' +
+          '</div>' +
+          '<div class="mobile-user-menu mobile-only">' +
+            '<button type="button" class="mobile-user-trigger" id="mobile-user-trigger" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu">' +
+              '<span class="mobile-user-avatar">' + escapeHTML(firstName.charAt(0).toUpperCase()) + '</span>' +
+              '<span class="mobile-user-name">' + escapeHTML(firstName) + '</span>' +
+              '<svg class="mobile-user-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
+            '</button>' +
+            '<div class="mobile-user-dropdown" id="mobile-user-dropdown" role="menu" hidden>' +
+              '<div class="mobile-menu-profile">' +
+                '<strong class="mobile-menu-fullname">' + escapeHTML(user.name) + '</strong>' +
+                '<span class="mobile-menu-email">' + escapeHTML(user.email) + '</span>' +
+              '</div>' +
+              '<button type="button" class="mobile-menu-signout" id="mobile-signout-btn" role="menuitem">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>' +
+                '<span>Sign out</span>' +
+              '</button>' +
+            '</div>' +
           '</div>';
 
         navLinks.appendChild(authContainer);
@@ -155,6 +176,33 @@
         var signoutBtn = document.getElementById('nav-signout-btn');
         if (signoutBtn) {
           signoutBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            Auth.logout();
+          });
+        }
+
+        var mobileTrigger = document.getElementById('mobile-user-trigger');
+        var mobileDropdown = document.getElementById('mobile-user-dropdown');
+        var mobileSignout = document.getElementById('mobile-signout-btn');
+
+        if (mobileTrigger && mobileDropdown) {
+          mobileTrigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = !mobileDropdown.hidden;
+            mobileDropdown.hidden = isOpen;
+            mobileTrigger.setAttribute('aria-expanded', String(!isOpen));
+          });
+
+          document.addEventListener('click', function (e) {
+            if (!authContainer.contains(e.target)) {
+              mobileDropdown.hidden = true;
+              mobileTrigger.setAttribute('aria-expanded', 'false');
+            }
+          });
+        }
+
+        if (mobileSignout) {
+          mobileSignout.addEventListener('click', function (e) {
             e.preventDefault();
             Auth.logout();
           });
@@ -176,6 +224,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    Auth.enforceAuth();
     Auth.updateNav();
     if (Auth.isLoggedIn()) {
       Auth.checkSession();

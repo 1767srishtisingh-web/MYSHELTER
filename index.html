@@ -12,6 +12,15 @@
   <link rel="preconnect" href="https://images.unsplash.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <script>
+    (function(){
+      try {
+        if (!localStorage.getItem('myshelter:auth_token')) {
+          window.location.replace('auth.html');
+        }
+      } catch(e){}
+    })();
+  </script>
 </head>
 <body data-page="home">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -77,25 +86,14 @@
             </div>
           </div>
           <div class="custom-dropdown sort-dropdown" id="sort-dropdown-wrap">
-            <label class="sr-only" for="sort">Sort rooms</label>
-            <select id="sort" class="sr-only" tabindex="-1" aria-hidden="true">
-              <option value="recommended">Recommended</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="stars">Star rating</option>
-            </select>
-
+            <input type="hidden" id="sort" name="sort" value="">
             <button type="button" class="dropdown-trigger" id="sort-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="sort-menu">
               <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>
-              <span class="dropdown-label" id="sort-label">Recommended</span>
+              <span class="dropdown-label" id="sort-label">Sort by</span>
               <svg class="dropdown-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
 
             <ul class="dropdown-menu" id="sort-menu" role="listbox" aria-labelledby="sort-trigger" tabindex="-1">
-              <li class="dropdown-option is-selected" role="option" data-value="recommended" aria-selected="true" tabindex="0">
-                <span class="option-text">Recommended</span>
-                <svg class="option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
-              </li>
               <li class="dropdown-option" role="option" data-value="price-asc" aria-selected="false" tabindex="0">
                 <span class="option-text">Price: Low to High</span>
                 <svg class="option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>

@@ -11,6 +11,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <script>
+    (function(){
+      try {
+        if (!localStorage.getItem('myshelter:auth_token')) {
+          window.location.replace('auth.html');
+        }
+      } catch(e){}
+    })();
+  </script>
 </head>
 <body data-page="checkout">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -39,10 +48,11 @@
       <div class="empty glass" id="no-room" hidden>
         <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
         <h2 id="no-room-title">No room selected</h2>
-        <p id="no-room-text">Choose a room and select "Book now".</p>
+        <p id="no-room-text">Choose a hotel room to review details and complete your booking.</p>
         <div class="actions"><a class="btn btn--olive" href="index.html">Browse rooms</a></div>
       </div>
 
+      <!-- Step 1: Review Booking & Guest Details -->
       <div class="checkout-grid" id="checkout-grid" hidden>
         <form class="panel glass--strong" id="booking-form" aria-labelledby="form-title">
           <h2 id="form-title">Guest Details</h2>
@@ -90,9 +100,8 @@
           </div>
 
           <div class="form-actions">
-            <button class="btn btn--olive" type="submit" id="confirm-btn">Confirm Booking</button>
+            <button class="btn btn--olive btn--lg" type="submit" id="continue-payment-btn">Continue to payment</button>
             <a class="btn btn--white" href="index.html">Change room</a>
-            <span class="secure-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4.4 3 8 7 9 4-1 7-4.6 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Pay at the hotel. No charge now.</span>
           </div>
         </form>
 
@@ -103,6 +112,8 @@
               <h2 id="summary-title">—</h2>
               <p id="sum-loc"></p>
               <div class="meta-row" id="sum-meta"></div>
+              <div class="amenities-summary-row" id="sum-amenities"></div>
+              <div class="policy-summary-row" id="sum-policy"></div>
             </div>
           </div>
 
@@ -128,18 +139,112 @@
           </div>
         </aside>
       </div>
+
+      <!-- Step 2: Payment Confirmation & Demo Options -->
+      <div class="payment-step-wrap" id="payment-step" hidden>
+        <div class="payment-grid">
+          <div class="panel glass--strong payment-methods-panel">
+            <h2>Select Payment Method</h2>
+            <p class="sub">Choose how you'd like to pay for your stay.</p>
+
+            <div class="payment-options" role="radiogroup" aria-label="Payment method">
+              <label class="payment-method-card is-selected" id="pm-upi-label">
+                <input type="radio" name="paymentMethod" value="UPI" checked>
+                <div class="pm-radio-circle"></div>
+                <div class="pm-body">
+                  <div class="pm-title-row">
+                    <strong>UPI</strong>
+                    <span class="pm-badge">Instant</span>
+                  </div>
+                  <span class="pm-sub">Google Pay, PhonePe, Paytm, BHIM</span>
+                </div>
+              </label>
+
+              <label class="payment-method-card" id="pm-card-label">
+                <input type="radio" name="paymentMethod" value="Card">
+                <div class="pm-radio-circle"></div>
+                <div class="pm-body">
+                  <div class="pm-title-row">
+                    <strong>Credit / Debit Card</strong>
+                  </div>
+                  <span class="pm-sub">Visa, MasterCard, RuPay, Amex</span>
+                </div>
+              </label>
+
+              <label class="payment-method-card" id="pm-hotel-label">
+                <input type="radio" name="paymentMethod" value="Pay at hotel">
+                <div class="pm-radio-circle"></div>
+                <div class="pm-body">
+                  <div class="pm-title-row">
+                    <strong>Pay at Hotel</strong>
+                  </div>
+                  <span class="pm-sub">Pay via cash, card, or UPI upon check-in</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="demo-payment-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <div>
+                <strong>Demo payment – no money will be charged.</strong>
+                <p>This is a demonstration booking system. No real card numbers, CVV, or UPI PIN are requested.</p>
+              </div>
+            </div>
+
+            <div class="form-actions payment-actions">
+              <button class="btn btn--olive btn--lg" type="button" id="proceed-pay-btn">Proceed to pay <span id="pay-btn-amount">₹0</span></button>
+              <button class="btn btn--white" type="button" id="back-review-btn">← Back to review</button>
+            </div>
+          </div>
+
+          <aside class="panel glass summary payment-summary-card">
+            <h2>Booking Summary</h2>
+            <div class="payment-summary-body">
+              <div class="summary-room-mini">
+                <img id="pm-sum-img" src="assets/placeholder.svg" alt="" width="64" height="64">
+                <div>
+                  <h3 id="pm-sum-hotel">—</h3>
+                  <p id="pm-sum-type" class="pm-sum-meta">—</p>
+                </div>
+              </div>
+              <div class="payment-summary-rows">
+                <div class="pm-row"><span>Check-in:</span><strong id="pm-sum-checkin">—</strong></div>
+                <div class="pm-row"><span>Stay duration:</span><strong id="pm-sum-nights">—</strong></div>
+                <div class="pm-row"><span>Guest:</span><strong id="pm-sum-guest">—</strong></div>
+                <div class="pm-row"><span>Phone:</span><strong id="pm-sum-phone">—</strong></div>
+              </div>
+              <div class="payment-total-box">
+                <span>Total amount</span>
+                <strong id="payment-summary-total">₹0</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
     </section>
   </main>
 
-  <dialog class="sheet" id="success-dialog" aria-labelledby="success-title" aria-describedby="success-text">
+  <dialog class="sheet success-sheet" id="success-dialog" aria-labelledby="success-title">
     <div class="sheet-body">
-      <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
-      <h2 id="success-title">Booking Confirmed!</h2>
-      <p id="success-text">Your room is reserved.</p>
-      <span class="ref" id="success-ref">MS-000000</span>
+      <div class="success-checkmark-wrap">
+        <svg class="success-checkmark" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2 id="success-title">Room booked successfully</h2>
+      <p class="success-subtitle">Your stay is reserved. Pay according to your selected payment method.</p>
+      
+      <div class="success-details-card">
+        <div class="success-row"><span>Booking Reference</span><strong class="ref" id="success-ref">MS-000000</strong></div>
+        <div class="success-row"><span>Hotel</span><strong id="success-hotel">—</strong></div>
+        <div class="success-row"><span>Check-in</span><strong id="success-date">—</strong></div>
+        <div class="success-row"><span>Total Paid</span><strong class="success-total" id="success-total">₹0</strong></div>
+      </div>
+
       <div class="sheet-actions">
-        <a class="btn btn--olive" href="bookings.html">My bookings</a>
-        <a class="btn btn--white" href="index.html">Browse rooms</a>
+        <a class="btn btn--olive" href="bookings.html">View my bookings</a>
+        <a class="btn btn--white" href="index.html">Back to rooms</a>
       </div>
     </div>
   </dialog>

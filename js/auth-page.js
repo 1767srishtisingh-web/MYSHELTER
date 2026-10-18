@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var email = document.getElementById('login-email').value.trim();
       var password = document.getElementById('login-password').value;
 
-      if (!email) { loginEmailErr.textContent = 'Please enter your email.'; return; }
+      if (!email) { loginEmailErr.textContent = 'Please enter your email address.'; return; }
       if (!password) { loginPassErr.textContent = 'Please enter your password.'; return; }
 
       loginBtn.disabled = true;
@@ -83,10 +83,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var res = await window.MyShelterAuth.login(email, password);
         if (res.ok) {
           window.MyShelterUI.toast('Welcome back, ' + res.user.name.split(' ')[0] + '!', 'success');
-          setTimeout(function () { window.location.href = redirectUrl; }, 600);
+          setTimeout(function () { window.location.replace('index.html'); }, 400);
         } else {
-          loginPassErr.textContent = res.error || (res.errors && (res.errors.email || res.errors.password)) || 'Sign in failed.';
-          window.MyShelterUI.toast(res.error || 'Sign in failed.', 'error');
+          var err = res.error || (res.errors && (res.errors.email || res.errors.password)) || 'Sign in failed.';
+          if (res.field === 'email' || /email/i.test(err)) {
+            loginEmailErr.textContent = err;
+          } else {
+            loginPassErr.textContent = err;
+          }
+          window.MyShelterUI.toast(err, 'error');
         }
       } catch (err) {
         loginPassErr.textContent = 'Network or server error. Please try again.';
@@ -144,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (res.ok) {
           window.MyShelterUI.toast('Account created! Welcome, ' + res.user.name.split(' ')[0] + '.', 'success');
-          setTimeout(function () { window.location.href = redirectUrl; }, 600);
+          setTimeout(function () { window.location.replace('index.html'); }, 400);
         } else {
           if (res.errors) {
             if (res.errors.name) regNameErr.textContent = res.errors.name;
@@ -152,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (res.errors.phone) regPhoneErr.textContent = res.errors.phone;
             if (res.errors.password) regPassErr.textContent = res.errors.password;
           }
-          window.MyShelterUI.toast(res.error || 'Please correct the form fields.', 'error');
+          window.MyShelterUI.toast(res.error || (res.errors && res.errors.email) || 'Please correct the form fields.', 'error');
         }
       } catch (err) {
         regPassErr.textContent = 'Server connection error. Please try again.';

@@ -11,6 +11,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <script>
+    (function(){
+      try {
+        if (localStorage.getItem('myshelter:auth_token')) {
+          window.location.replace('index.html');
+        }
+      } catch(e){}
+    })();
+  </script>
 </head>
 <body data-page="auth">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -29,6 +38,12 @@
 
   <main id="main">
     <div class="auth-wrap wrap">
+      <!-- Brand Header -->
+      <div class="auth-hero text-center">
+        <h1 class="auth-brand-name">MYSHELTER</h1>
+        <p class="auth-tagline">Curated hotel rooms across Delhi, Noida, and Ghaziabad.</p>
+      </div>
+
       <!-- Signed-in State Card -->
       <div class="auth-card panel" id="signed-in-card" hidden>
         <div class="auth-card-head">
