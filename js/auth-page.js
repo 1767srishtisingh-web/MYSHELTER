@@ -148,8 +148,35 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (res.ok) {
-          window.MyShelterUI.toast('Account created! Welcome, ' + res.user.name.split(' ')[0] + '.', 'success');
-          setTimeout(function () { window.location.replace('index.html'); }, 400);
+          var regModal = document.getElementById('reg-success-dialog');
+          var nameEl = document.getElementById('reg-modal-name');
+          var emailEl = document.getElementById('reg-modal-email');
+          var phoneEl = document.getElementById('reg-modal-phone');
+          var continueBtn = document.getElementById('reg-modal-continue-btn');
+
+          if (nameEl) nameEl.textContent = res.user.name;
+          if (emailEl) emailEl.textContent = res.user.email;
+          if (phoneEl) phoneEl.textContent = res.user.phone ? '+91 ' + res.user.phone : '—';
+
+          if (regModal && typeof regModal.showModal === 'function') {
+            regModal.showModal();
+
+            if (continueBtn) {
+              continueBtn.addEventListener('click', function () {
+                window.location.replace('index.html');
+              });
+            }
+
+            regModal.addEventListener('click', function (e) {
+              if (e.target === regModal) {
+                regModal.close();
+                window.location.replace('index.html');
+              }
+            });
+          } else {
+            window.MyShelterUI.toast('Account created! Welcome, ' + res.user.name.split(' ')[0] + '.', 'success');
+            setTimeout(function () { window.location.replace('index.html'); }, 500);
+          }
         } else {
           if (res.errors) {
             if (res.errors.name) regNameErr.textContent = res.errors.name;

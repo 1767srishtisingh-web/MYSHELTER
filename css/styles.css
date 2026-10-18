@@ -354,8 +354,10 @@ h1 {
   font-size: 14px;
   color: var(--muted);
   font-weight: 600;
-  padding-right: 4px;
-  border-right: 1px solid rgba(0,0,0,0.1);
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  line-height: 1;
 }
 
 .search-bar {
@@ -2402,48 +2404,86 @@ dialog.sheet::backdrop {
   color: var(--olive-dark);
 }
 
-/* 6. Success Modal & Green Tick Animation */
-.success-sheet {
-  max-width: 480px;
-  width: 90vw;
-  padding: 36px 28px;
+/* 6. Clean Success Modals (Registration & Booking) */
+dialog.clean-modal {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  width: min(92vw, 440px);
+  max-width: 440px;
+  overflow: visible;
+  outline: none;
+  margin: auto;
+}
+
+dialog.clean-modal::backdrop {
+  background: rgba(18, 28, 20, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeInBackdrop 0.2s ease-out;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content-card {
+  background: #ffffff;
   border-radius: var(--r-lg);
+  padding: 32px 28px;
   text-align: center;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  overflow: hidden;
+  box-sizing: border-box;
 }
-.success-checkmark-wrap {
-  width: 60px;
-  height: 60px;
+
+@keyframes modalPop {
+  0% { transform: scale(0.92) translateY(8px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-check-icon {
+  width: 56px;
+  height: 56px;
   margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.success-checkmark {
-  width: 60px;
-  height: 60px;
+
+.modal-check-svg {
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: block;
   stroke-width: 3.5;
   stroke: var(--olive-dark);
   stroke-miterlimit: 10;
-  animation: scalePop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: scalePop 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.checkmark-circle {
+
+.modal-check-circle {
   stroke-dasharray: 166;
   stroke-dashoffset: 166;
   stroke-width: 3.5;
   stroke: var(--olive-3);
   fill: none;
-  animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+  animation: strokeCircle 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
-.checkmark-check {
+
+.modal-check-path {
   transform-origin: 50% 50%;
   stroke-dasharray: 48;
   stroke-dashoffset: 48;
   stroke: var(--olive-dark);
   stroke-linecap: round;
   stroke-linejoin: round;
-  animation: strokeCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+  animation: strokeCheck 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
 }
+
 @keyframes strokeCircle {
   100% { stroke-dashoffset: 0; }
 }
@@ -2456,46 +2496,118 @@ dialog.sheet::backdrop {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.success-subtitle {
-  font-size: 14px;
-  color: var(--muted);
-  margin-block: 6px 20px;
+.modal-title {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+  line-height: 1.25;
 }
-.success-details-card {
+
+.modal-description {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.modal-details-card {
   background: var(--paper-light);
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: var(--r-md);
-  padding: 16px;
-  margin-bottom: 24px;
+  padding: 14px 18px;
+  margin-bottom: 22px;
   text-align: left;
   display: flex;
   flex-direction: column;
   gap: 10px;
   font-size: 13.5px;
 }
-.success-row {
+
+.modal-detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
-.success-row span {
+
+.modal-detail-row span {
   color: var(--muted);
+  font-size: 13px;
+  flex-shrink: 0;
 }
-.success-row strong {
+
+.modal-detail-row strong {
   color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
 }
-.success-row .ref {
+
+.modal-detail-row .ref-tag {
   background: rgba(70, 89, 64, 0.12);
   padding: 2px 8px;
   border-radius: 4px;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--olive-dark);
+  letter-spacing: 0.5px;
 }
-.success-total {
+
+.modal-detail-row .success-total {
   color: var(--olive-dark);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+/* Fallback & Legacy compatibility */
+.success-sheet {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  width: min(92vw, 440px);
+  max-width: 440px;
+  overflow: visible;
+}
+.success-sheet .sheet-body {
+  padding: 32px 28px;
+}
+
+@media (max-width: 480px) {
+  .modal-content-card {
+    padding: 24px 20px;
+  }
+  .modal-title {
+    font-size: 1.3rem;
+  }
+  .modal-description {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .modal-details-card {
+    padding: 12px 14px;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
 /* Reduced motion */

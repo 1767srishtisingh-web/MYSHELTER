@@ -152,6 +152,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Registration Success Modal -->
+    <dialog class="clean-modal" id="reg-success-dialog" aria-labelledby="reg-success-title">
+      <div class="modal-content-card">
+        <div class="modal-check-icon">
+          <svg class="modal-check-svg" viewBox="0 0 52 52" aria-hidden="true">
+            <circle class="modal-check-circle" cx="26" cy="26" r="24" fill="none"/>
+            <path class="modal-check-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
+        </div>
+        <h2 id="reg-success-title" class="modal-title">Registration Successful</h2>
+        <p class="modal-description">Your account is ready. You can now explore and book hotel rooms.</p>
+        
+        <div class="modal-details-card">
+          <div class="modal-detail-row"><span>Name</span><strong id="reg-modal-name">—</strong></div>
+          <div class="modal-detail-row"><span>Email</span><strong id="reg-modal-email">—</strong></div>
+          <div class="modal-detail-row"><span>Mobile</span><strong id="reg-modal-phone">—</strong></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn--olive btn--full" id="reg-modal-continue-btn">Explore Rooms</button>
+        </div>
+      </div>
+    </dialog>
   </main>
 
   <footer class="site-footer wrap">
