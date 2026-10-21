@@ -1,9 +1,9 @@
 'use strict';
 
-const { getSupabase } = require('./lib/supabase');
-const { getUserFromReq } = require('./lib/auth');
-const { validateBooking } = require('./lib/validate');
-const { json, error } = require('./lib/respond');
+const { getSupabase } = require('./_lib/supabase');
+const { getUserFromReq } = require('./_lib/auth');
+const { validateBooking } = require('./_lib/validate');
+const { json, error } = require('./_lib/respond');
 
 module.exports = async function handler(req, res) {
   const supabase = getSupabase();

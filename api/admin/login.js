@@ -1,7 +1,7 @@
 'use strict';
 
-const { createToken } = require('../lib/auth');
-const { json, error } = require('../lib/respond');
+const { createToken } = require('../_lib/auth');
+const { json, error } = require('../_lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {

@@ -74,7 +74,7 @@ MYSHELTER uses Supabase PostgreSQL for persistent user accounts, hotel bookings,
    - **service_role (secret)** key (bypasses Row Level Security for backend serverless functions).
    - **anon (public)** key.
 
-> **Note on Local/Offline Fallback:** If Supabase credentials are not configured, the backend includes an automatic in-memory fallback store in `api/lib/supabase.js` so that local development and testing never crash or block feature testing.
+> **Note on Local/Offline Fallback:** If Supabase credentials are not configured, the backend includes an automatic in-memory fallback store in `api/_lib/supabase.js` so that local development and testing never crash or block feature testing. Shared helper modules live under `api/_lib/` (prefixed with `_`) so Vercel excludes them from counting towards the 12 Serverless Functions limit on the Hobby plan.
 
 ---
 

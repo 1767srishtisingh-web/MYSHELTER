@@ -1,7 +1,7 @@
 'use strict';
 
-const { sendOtp } = require('../lib/otp');
-const { json, error } = require('../lib/respond');
+const { sendOtp } = require('../_lib/otp');
+const { json, error } = require('../_lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {

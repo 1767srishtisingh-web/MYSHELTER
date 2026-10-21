@@ -1,8 +1,8 @@
 'use strict';
 
-const { getSupabase } = require('../lib/supabase');
-const { getUserFromReq } = require('../lib/auth');
-const { json, error } = require('../lib/respond');
+const { getSupabase } = require('../_lib/supabase');
+const { getUserFromReq } = require('../_lib/auth');
+const { json, error } = require('../_lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {

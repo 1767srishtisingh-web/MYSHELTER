@@ -57,6 +57,9 @@ const server = http.createServer((req, res) => {
   // Handle Serverless API routes locally
   if (pathname.startsWith('/api/')) {
     let apiPath = pathname.replace(/^\/api\//, '').replace(/\/$/, '');
+    if (apiPath.startsWith('_') || apiPath.includes('/_')) {
+      return send(res, 404, JSON.stringify({ ok: false, error: 'API route not found' }), TYPES['.json']);
+    }
     let fileCandidates = [
       path.resolve(__dirname, '..', 'api', apiPath + '.js'),
       path.resolve(__dirname, '..', 'api', apiPath, 'index.js')
