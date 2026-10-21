@@ -2,24 +2,54 @@
 <html lang="en-IN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Page not found — MYSHELTER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Page Not Found — MYSHELTER</title>
   <meta name="robots" content="noindex">
-  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#e8e0d8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
-  <main id="main" class="wrap page-head">
-    <div class="empty glass">
+<body data-page="404">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+        <span class="brand-text">MYSHELTER</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Rooms</a>
+        <a class="nav-link" href="bookings.html"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main" class="error-page-main wrap">
+    <div class="empty glass error-card">
       <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
       <h1 class="sr-only">Page not found</h1>
-      <h2>This page doesn't exist</h2>
-      <p>Head back and find your perfect room.</p>
-      <div class="actions"><a class="btn btn--olive" href="/">Back to Rooms</a></div>
+      <h2>This page doesn’t exist</h2>
+      <p>The page you requested could not be found. Head back to explore verified hotel rooms.</p>
+      <div class="actions"><a class="btn btn--olive" href="index.html">Back to Rooms</a></div>
     </div>
   </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-inner">
+      <span>© <span data-year>2026</span> MYSHELTER</span>
+      <span class="footer-note">Demo project. Tariffs are indicative and photos are representative.</span>
+      <nav aria-label="Footer">
+        <a href="index.html">Rooms</a>
+        <a href="bookings.html">My bookings</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/store.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/auth.js" defer></script>
 </body>
 </html>
