@@ -15,8 +15,21 @@ CREATE TABLE IF NOT EXISTS public.users (
   phone TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
+  email_verified BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Ensure email_verified column exists if table was created in an earlier migration
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'email_verified'
+  ) THEN
+    ALTER TABLE public.users ADD COLUMN email_verified BOOLEAN DEFAULT false NOT NULL;
+  END IF;
+END
+$$;
 
 -- Index on email for fast lookups during authentication
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
@@ -70,12 +83,30 @@ CREATE TABLE IF NOT EXISTS public.preferences (
 -- Index on user_id
 CREATE INDEX IF NOT EXISTS idx_preferences_user_id ON public.preferences(user_id);
 
--- Optional: Enable Row Level Security (RLS)
+-- 5. OTP Codes Table
+-- Stores one-time passwords for email verification
+CREATE TABLE IF NOT EXISTS public.otp_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  code TEXT NOT NULL,
+  purpose TEXT DEFAULT 'verification' NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  consumed BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Indexes for OTP queries
+CREATE INDEX IF NOT EXISTS idx_otp_codes_email ON public.otp_codes(email);
+CREATE INDEX IF NOT EXISTS idx_otp_codes_code ON public.otp_codes(code);
+CREATE INDEX IF NOT EXISTS idx_otp_codes_expires_at ON public.otp_codes(expires_at);
+
+-- 6. Enable Row Level Security (RLS)
 -- Because our Vercel Serverless Functions use SUPABASE_SERVICE_ROLE_KEY,
 -- the backend can securely read and write all tables regardless of RLS settings.
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.otp_codes ENABLE ROW LEVEL SECURITY;
 
 -- Allow service role full access to all tables
 DO $$
@@ -97,6 +128,11 @@ BEGIN
   ) THEN
     CREATE POLICY "Service role full access on preferences" ON public.preferences FOR ALL USING (true);
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'otp_codes' AND policyname = 'Service role full access on otp_codes'
+  ) THEN
+    CREATE POLICY "Service role full access on otp_codes" ON public.otp_codes FOR ALL USING (true);
+  END IF;
 END
 $$;
-

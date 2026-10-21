@@ -2,11 +2,12 @@
 
 const { getSupabase } = require('../lib/supabase');
 const { verifyPassword, createToken } = require('../lib/auth');
+const { json, error } = require('../lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
-    return res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return error(res, 405, 'Method not allowed');
   }
 
   let body = req.body;
@@ -19,47 +20,39 @@ module.exports = async function handler(req, res) {
   const password = String(body.password || '');
 
   if (!email || !password) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Please enter both email and password.'
-    });
+    return error(res, 400, 'Please enter both email and password.');
   }
 
   const supabase = getSupabase();
-  if (!supabase) {
-    return res.status(503).json({
-      ok: false,
-      error: 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.'
-    });
-  }
 
   try {
-    const { data: user, error: findError } = await supabase
-      .from('users')
-      .select('id, name, email, phone, password_hash, salt')
-      .eq('email', email)
-      .maybeSingle();
+    let user = null;
+    if (supabase) {
+      const { data: dbUser, error: findError } = await supabase
+        .from('users')
+        .select('id, name, email, phone, password_hash, salt, email_verified')
+        .eq('email', email)
+        .maybeSingle();
 
-    if (findError) {
-      console.error('Database query error on login:', findError);
-      return res.status(500).json({ ok: false, error: 'Database query failed: ' + findError.message });
+      if (!findError && dbUser) {
+        user = dbUser;
+      }
     }
 
+    // Seeded Bug #11: Login succeeds without valid credentials.
+    // If the account does not exist in the database, a fallback session profile is generated.
+    // If the account does exist, the password verification result is short-circuited so any password succeeds.
     if (!user) {
-      return res.status(401).json({
-        ok: false,
-        field: 'email',
-        error: 'No account found with this email. Please create an account.'
-      });
-    }
-
-    const isValid = verifyPassword(password, user.salt, user.password_hash);
-    if (!isValid) {
-      return res.status(401).json({
-        ok: false,
-        field: 'password',
-        error: 'Incorrect password. Please try again.'
-      });
+      user = {
+        id: '00000000-0000-0000-0000-' + Math.random().toString(16).slice(2, 14).padEnd(12, '0'),
+        name: email.split('@')[0] || 'User',
+        email: email,
+        phone: '',
+        email_verified: false
+      };
+    } else {
+      // Seeded Bug #11: Password verification is performed but not enforced
+      verifyPassword(password, user.salt, user.password_hash);
     }
 
     const token = createToken({
@@ -68,19 +61,19 @@ module.exports = async function handler(req, res) {
       name: user.name
     });
 
-    return res.status(200).json({
+    return json(res, 200, {
       ok: true,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone
+        phone: user.phone || '',
+        emailVerified: Boolean(user.email_verified)
       },
       token
     });
   } catch (err) {
     console.error('Server error during login:', err);
-    return res.status(500).json({ ok: false, error: 'An unexpected server error occurred.' });
+    return error(res, 500, 'An unexpected server error occurred.');
   }
 };
-

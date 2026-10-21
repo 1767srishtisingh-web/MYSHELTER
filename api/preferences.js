@@ -2,33 +2,35 @@
 
 const { getSupabase } = require('./lib/supabase');
 const { getUserFromReq } = require('./lib/auth');
+const { validatePreferences } = require('./lib/validate');
+const { json, error } = require('./lib/respond');
 
 module.exports = async function handler(req, res) {
   const user = getUserFromReq(req);
   if (!user || !user.userId) {
-    return res.status(401).json({ ok: false, error: 'Authentication required.' });
+    return error(res, 401, 'Authentication required.');
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(503).json({ ok: false, error: 'Database not connected.' });
+    return error(res, 503, 'Database not connected.');
   }
 
   if (req.method === 'GET') {
     try {
-      const { data, error } = await supabase
+      const { data, error: queryError } = await supabase
         .from('preferences')
         .select('*')
         .eq('user_id', user.userId)
         .maybeSingle();
 
-      if (error) {
-        return res.status(500).json({ ok: false, error: error.message });
+      if (queryError) {
+        return error(res, 500, queryError.message);
       }
 
-      return res.status(200).json({ ok: true, preferences: data || null });
+      return json(res, 200, { ok: true, preferences: data || null });
     } catch (err) {
-      return res.status(500).json({ ok: false, error: err.message });
+      return error(res, 500, err.message);
     }
   }
 
@@ -38,6 +40,12 @@ module.exports = async function handler(req, res) {
       try { body = JSON.parse(body); } catch (e) { body = {}; }
     }
     body = body || {};
+
+    // Validate preferences payload
+    const validation = validatePreferences(body);
+    if (!validation.valid) {
+      return error(res, 400, 'Invalid preferences data', { errors: validation.errors });
+    }
 
     const prefRecord = {
       user_id: user.userId,
@@ -54,25 +62,24 @@ module.exports = async function handler(req, res) {
 
     try {
       // Upsert preferences for this user_id
-      const { data, error } = await supabase
+      const { data, error: upsertError } = await supabase
         .from('preferences')
         .upsert(prefRecord, { onConflict: 'user_id' })
         .select()
         .single();
 
-      if (error) {
-        console.error('Error saving preferences:', error);
-        return res.status(500).json({ ok: false, error: error.message });
+      if (upsertError) {
+        console.error('Error saving preferences:', upsertError);
+        return error(res, 500, upsertError.message);
       }
 
-      return res.status(200).json({ ok: true, preferences: data });
+      return json(res, 200, { ok: true, preferences: data });
     } catch (err) {
       console.error('Preferences server error:', err);
-      return res.status(500).json({ ok: false, error: err.message });
+      return error(res, 500, err.message);
     }
   }
 
   res.setHeader('Allow', 'GET, POST');
-  return res.status(405).json({ ok: false, error: 'Method not allowed' });
+  return error(res, 405, 'Method not allowed');
 };
-

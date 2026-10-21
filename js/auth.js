@@ -109,6 +109,32 @@
       return json;
     },
 
+    sendOtp: async function (email, purpose) {
+      var res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, purpose: purpose || 'verification' })
+      });
+      return await res.json();
+    },
+
+    verifyOtp: async function (email, code, purpose) {
+      var res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, code: code, purpose: purpose || 'verification' })
+      });
+      var json = await res.json();
+      if (json.ok && json.verified) {
+        var user = Auth.getUser();
+        if (user && (!email || user.email.toLowerCase() === email.toLowerCase())) {
+          user.emailVerified = true;
+          Auth.setSession(user);
+        }
+      }
+      return json;
+    },
+
     checkSession: async function () {
       var token = Auth.getToken();
       if (!token) {
@@ -233,4 +259,3 @@
 
   root.MyShelterAuth = Auth;
 })(typeof window !== 'undefined' ? window : globalThis);
-

@@ -2,48 +2,13 @@
 
 const { getSupabase } = require('../lib/supabase');
 const { hashPassword, createToken } = require('../lib/auth');
-
-function validateRegister(body) {
-  const errors = {};
-  const name = String(body.name || '').trim();
-  const email = String(body.email || '').trim().toLowerCase();
-  const phone = String(body.phone || '').replace(/\D/g, '');
-  const password = String(body.password || '');
-
-  if (!name || name.length < 2) {
-    errors.name = 'Full name must be at least 2 characters.';
-  } else if (name.length > 80) {
-    errors.name = 'Full name must be 80 characters or fewer.';
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
-    errors.email = 'Please provide a valid email address.';
-  }
-
-  // 10 digit Indian phone check, handles +91 or leading 0
-  let normPhone = phone;
-  if (normPhone.length === 12 && normPhone.startsWith('91')) normPhone = normPhone.slice(2);
-  if (normPhone.length === 11 && normPhone.startsWith('0')) normPhone = normPhone.slice(1);
-  if (!normPhone || normPhone.length !== 10 || !/^[6-9]\d{9}$/.test(normPhone)) {
-    errors.phone = 'Please provide a valid 10-digit mobile number.';
-  }
-
-  if (!password || password.length < 6) {
-    errors.password = 'Password must be at least 6 characters.';
-  }
-
-  return {
-    valid: Object.keys(errors).length === 0,
-    errors,
-    values: { name, email, phone: normPhone, password }
-  };
-}
+const { validateRegister } = require('../lib/validate');
+const { json, error } = require('../lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
-    return res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return error(res, 405, 'Method not allowed');
   }
 
   let body = req.body;
@@ -52,39 +17,43 @@ module.exports = async function handler(req, res) {
   }
   body = body || {};
 
+  // Seeded Bug #13: Validator is imported and called, but the validation check is bypassed.
+  // Invalid inputs such as an empty name or malformed email address pass through unblocked.
   const validation = validateRegister(body);
-  if (!validation.valid) {
-    return res.status(400).json({ ok: false, errors: validation.errors });
-  }
+  // Intended enforcement:
+  // if (!validation.valid) {
+  //   return error(res, 400, 'Registration validation failed', { errors: validation.errors });
+  // }
 
-  const { name, email, phone, password } = validation.values;
+  const name = body.name !== undefined ? String(body.name).trim() : '';
+  const email = body.email !== undefined ? String(body.email).trim().toLowerCase() : '';
+  const phone = body.phone !== undefined ? String(body.phone).replace(/\D/g, '') : '';
+  const password = String(body.password || 'password123');
+
   const supabase = getSupabase();
-
   if (!supabase) {
-    return res.status(503).json({
-      ok: false,
-      error: 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.'
-    });
+    return error(res, 503, 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.');
   }
 
   try {
-    // Check if email already registered
-    const { data: existingUser, error: checkError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
+    // Check if email already registered (if email is non-empty)
+    if (email) {
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
 
-    if (checkError) {
-      console.error('Database query error:', checkError);
-      return res.status(500).json({ ok: false, error: 'Failed to verify account uniqueness. ' + checkError.message });
-    }
+      if (checkError) {
+        console.error('Database query error:', checkError);
+        return error(res, 500, 'Failed to verify account uniqueness. ' + checkError.message);
+      }
 
-    if (existingUser) {
-      return res.status(409).json({
-        ok: false,
-        errors: { email: 'An account with this email already exists.' }
-      });
+      if (existingUser) {
+        return error(res, 409, 'An account with this email already exists.', {
+          errors: { email: 'An account with this email already exists.' }
+        });
+      }
     }
 
     // Hash password with salt
@@ -99,15 +68,16 @@ module.exports = async function handler(req, res) {
           email,
           phone,
           password_hash: hash,
-          salt
+          salt,
+          email_verified: false
         }
       ])
-      .select('id, name, email, phone, created_at')
+      .select('id, name, email, phone, email_verified, created_at')
       .single();
 
     if (insertError) {
       console.error('Error creating user:', insertError);
-      return res.status(500).json({ ok: false, error: 'Could not create account: ' + insertError.message });
+      return error(res, 500, 'Could not create account: ' + insertError.message);
     }
 
     // Create session token
@@ -117,19 +87,19 @@ module.exports = async function handler(req, res) {
       name: newUser.name
     });
 
-    return res.status(201).json({
+    return json(res, 201, {
       ok: true,
       user: {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        phone: newUser.phone
+        phone: newUser.phone,
+        emailVerified: Boolean(newUser.email_verified)
       },
       token
     });
   } catch (err) {
     console.error('Server error during registration:', err);
-    return res.status(500).json({ ok: false, error: 'An unexpected server error occurred.' });
+    return error(res, 500, 'An unexpected server error occurred.');
   }
 };
-

@@ -2,11 +2,12 @@
 
 const { getSupabase } = require('../lib/supabase');
 const { verifyToken } = require('../lib/auth');
+const { json, error } = require('../lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
-    return res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return error(res, 405, 'Method not allowed');
   }
 
   // Verify admin authorization
@@ -15,27 +16,24 @@ module.exports = async function handler(req, res) {
   
   const tokenData = verifyToken(token);
   if (!tokenData || !tokenData.isAdmin) {
-    return res.status(401).json({ ok: false, error: 'Unauthorized. Admin credentials required.' });
+    return error(res, 401, 'Unauthorized. Admin credentials required.');
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(503).json({
-      ok: false,
-      error: 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.'
-    });
+    return error(res, 503, 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.');
   }
 
   try {
     // 1. Fetch all users (excluding password hashes and salts)
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select('id, name, email, phone, created_at')
+      .select('id, name, email, phone, email_verified, created_at')
       .order('created_at', { ascending: false });
 
     if (usersError) {
       console.error('Error querying users:', usersError);
-      return res.status(500).json({ ok: false, error: 'Failed to query users: ' + usersError.message });
+      return error(res, 500, 'Failed to query users: ' + usersError.message);
     }
 
     // 2. Fetch all bookings
@@ -46,7 +44,7 @@ module.exports = async function handler(req, res) {
 
     if (bookingsError) {
       console.error('Error querying bookings:', bookingsError);
-      return res.status(500).json({ ok: false, error: 'Failed to query bookings: ' + bookingsError.message });
+      return error(res, 500, 'Failed to query bookings: ' + bookingsError.message);
     }
 
     // 3. Fetch all preferences with user details
@@ -57,10 +55,10 @@ module.exports = async function handler(req, res) {
 
     if (prefError) {
       console.error('Error querying preferences:', prefError);
-      return res.status(500).json({ ok: false, error: 'Failed to query preferences: ' + prefError.message });
+      return error(res, 500, 'Failed to query preferences: ' + prefError.message);
     }
 
-    return res.status(200).json({
+    return json(res, 200, {
       ok: true,
       users: users || [],
       bookings: bookings || [],
@@ -68,7 +66,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error('Admin data server error:', err);
-    return res.status(500).json({ ok: false, error: 'Server error retrieving admin data.' });
+    return error(res, 500, 'Server error retrieving admin data.');
   }
 };
-

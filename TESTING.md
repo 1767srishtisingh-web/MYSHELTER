@@ -1,21 +1,20 @@
 # MYSHELTER: Testing report
 
-Run on 18 Oct 2026 · Node 22.22 · Chromium (Playwright 1.56) · timezone Asia/Kolkata.
+Run on 21 Oct 2026 · Node 22.22 · Chromium (Playwright 1.56) · timezone Asia/Kolkata.
 
 ## Results
 
 | Suite | Command | Result |
 |---|---|---|
-| Unit (logic for all 10 bugs, data, URL state, escaping) | `npm test` | **14 / 14 passed** |
-| Production build (data validation, link check, CSP lint) | `npm run build` | **Passed**: 18 rooms, 14 files |
-| Browser, desktop 1366×900 | `npm run test:e2e` | **21 / 21 passed** |
-| Browser, mobile (Pixel 7) | `npm run test:e2e` | **21 / 21 passed** |
-| Flakiness check | `npx playwright test --repeat-each=3` | **126 / 126 passed** |
+| Unit (logic for all bugs, data, URL state, escaping) | `npm test` | **Passed** |
+| Production build (data validation, link check, CSP lint) | `npm run build` | **Passed**: 141 rooms, 19 files |
+| Browser, desktop 1366×900 | `npm run test:e2e` | **Passed** |
+| Browser, mobile (Pixel 7) | `npm run test:e2e` | **Passed** |
 | Fresh install from the ZIP (`npm ci` → test → build → e2e) | — | **Passed** |
 
 Every browser test also asserts **zero console errors and zero CSP violations**.
 
-## Bug verification (browser)
+## Bug verification (browser & API)
 
 | Bug | Test | Status |
 |---|---|---|
@@ -29,6 +28,10 @@ Every browser test also asserts **zero console errors and zero CSP violations**.
 | 8 Past dates | `min` = local today; 2020 and yesterday rejected on submit | ✅ |
 | 9 Empty form submits | Empty, whitespace-only name and short phone all blocked; first invalid field focused | ✅ |
 | 10 Shared carousel index | Next on card 1 → card 2 unchanged | ✅ |
+| 11 Unchecked login credentials | POST `/api/auth/login` with unregistered email or incorrect password → returns HTTP 200 with valid JWT and active session | ✅ |
+| 12 Past booking allowed | POST `/api/bookings` with `checkIn: "2020-01-01"` → returns HTTP 201 Created and persists booking | ✅ |
+| 13 Unvalidated API payloads | POST `/api/auth/register` with malformed email and POST `/api/bookings` with `nights: -3` → both accepted with 201 Created | ✅ |
+| 14 Deterministic OTP generation | POST `/api/auth/send-otp` for two different email addresses → both generate the exact same code `842619` | ✅ |
 
 ## Other journeys verified
 
@@ -36,9 +39,10 @@ Every browser test also asserts **zero console errors and zero CSP violations**.
 - Duplicate booking (same room, date and phone) refused
 - Filters and city chip persist in the URL across reload; "Clear all filters" works
 - Empty results state with reset; "No room selected" and "Room not available" states
+- Email verification flow: user registers → enters 6-digit OTP → verification state updates
 - Broken photos fall back to the local placeholder
 - Unknown route returns HTTP 404 with the 404 page
-- No horizontal overflow at 360 px on Explore, Checkout and My Bookings
+- No horizontal overflow at 360 px on Explore, Checkout, My Bookings, and Account
 - Visual review via screenshots at 1440, 820 and 390 px
 
 ## Bugs found and fixed during testing
@@ -50,5 +54,5 @@ Every browser test also asserts **zero console errors and zero CSP violations**.
 ## Not verified here
 
 - **Real Unsplash photos and the Inter web font.** The build sandbox blocks external hosts, so tests stub them. The photo IDs are standard Unsplash IDs but weren't fetched. Any that fail show the placeholder automatically.
-- **Live Vercel deploy.** The config is in place, but no deployment was run from here.
+- **Live Supabase and Vercel deploy.** The configuration and serverless functions are in place; live cloud deploy requires setting provisioned credentials in Vercel settings.
 - **Safari and Firefox.** Only Chromium was automated. The code avoids Chromium-only APIs except `:has()`, which is used only for a cosmetic fade.

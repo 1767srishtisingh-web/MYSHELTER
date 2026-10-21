@@ -7,13 +7,14 @@ A hotel booking website for **Delhi, Noida, and Ghaziabad** with a warm earthy a
 ## 🌟 Key Features
 
 1. **Frontend**: Plain HTML, CSS, and JavaScript. No React or external UI frameworks.
-2. **Backend**: Vercel Serverless Functions (`/api/*`) for authentication, bookings, search preferences, and admin data.
-3. **Database**: Supabase PostgreSQL database storing users, bookings, and user search preferences.
+2. **Backend**: Vercel Serverless Functions (`/api/*`) for authentication, bookings, search preferences, OTP verification, and admin data.
+3. **Database**: Supabase PostgreSQL database storing users, bookings, user search preferences, and OTP verification codes.
 4. **User Registration & Authentication**:
    - Register and Sign In page (`auth.html`).
    - Secure password hashing using Node.js `crypto.scrypt` with cryptographic salts (never plain text).
    - Session persistence via signed JWT tokens; users stay logged in across page refreshes.
    - Dynamic navigation header reflecting user authentication status.
+   - Email verification via 6-digit OTP code flow (`send-otp` and `verify-otp`).
 5. **Bookings & Preferences**:
    - Bookings are saved directly to the Supabase database linked to the signed-in user.
    - User search preferences (preferred city, room type, budget, amenities, sort) are saved to database on search/filter.
@@ -28,8 +29,8 @@ A hotel booking website for **Delhi, Noida, and Ghaziabad** with a warm earthy a
    - Custom-styled dropdown matching the warm earthy Haven theme.
    - Smooth opening/closing animation, hover states, check mark indicator on active selection.
    - Full keyboard accessibility (Enter, Space, Arrow keys, Escape) and touch-friendly mobile support.
-8. **10 Seeded Bugs Preserved**:
-   - Maintained exactly for the bug-hunt event version.
+8. **14 Seeded Bugs Preserved**:
+   - Maintained intentionally for the bug-hunt event version.
 
 ---
 
@@ -42,9 +43,10 @@ A hotel booking website for **Delhi, Noida, and Ghaziabad** with a warm earthy a
 3. Once the project is provisioned, go to **SQL Editor** from the left sidebar.
 4. Click **New query**, paste the entire contents of `supabase/schema.sql`, and click **Run**.
 5. The following tables will be created:
-   - `users`: Stores user names, emails, phones, and salted password hashes.
+   - `users`: Stores user names, emails, phones, email verification status, and salted password hashes.
    - `bookings`: Stores all hotel room reservations linked to users.
    - `preferences`: Stores user search filters and preferences.
+   - `otp_codes`: Stores one-time verification codes and expiry timestamps.
 6. Retrieve your API keys from **Project Settings** -> **API**:
    - **Project URL** (e.g., `https://xyzcompany.supabase.co`)
    - **service_role (secret)** key (under Project API keys)
@@ -65,6 +67,7 @@ A hotel booking website for **Delhi, Noida, and Ghaziabad** with a warm earthy a
 | `SUPABASE_ANON_KEY` | `eyJh...` | Public anon key |
 | `ADMIN_PASSWORD` | `admin2026` | Password to unlock `/admin` portal |
 | `JWT_SECRET` | `your-secret-key-32chars` | Random secret key to sign session tokens |
+| `OTP_TTL_MINUTES` | `10` | Expiration window in minutes for email OTP verification |
 
 4. Click **Save** and trigger a redeployment (or push a commit to GitHub to deploy automatically).
 
@@ -105,11 +108,16 @@ MYSHELTER/
 ├── api/                  Vercel Serverless Functions
 │   ├── lib/
 │   │   ├── supabase.js   Supabase client with service role key
-│   │   └── auth.js       Scrypt password hashing & JWT signing
+│   │   ├── auth.js       Scrypt password hashing & JWT signing
+│   │   ├── validate.js   Shared input validators (email, phone, name, nights, ids)
+│   │   ├── otp.js        OTP generation, storage, send, and verify helpers
+│   │   └── respond.js    Standardized json() and error() response helpers
 │   ├── auth/
 │   │   ├── register.js   POST /api/auth/register
 │   │   ├── login.js      POST /api/auth/login
-│   │   └── me.js         GET /api/auth/me
+│   │   ├── me.js         GET /api/auth/me
+│   │   ├── send-otp.js   POST /api/auth/send-otp
+│   │   └── verify-otp.js POST /api/auth/verify-otp
 │   ├── bookings/
 │   │   └── cancel.js     POST /api/bookings/cancel
 │   ├── bookings.js       GET / POST /api/bookings
@@ -131,7 +139,7 @@ MYSHELTER/
 
 ## 🐞 Seeded Bugs (Event Edition)
 
-This is the bug-hunt version. The following 10 seeded bugs are intentionally preserved:
+This is the bug-hunt version. The following 14 seeded bugs are intentionally preserved:
 
 1. **Refresh clears selected room**: Room selection in URL is stripped on load.
 2. **Room type filter mismatch**: `||` used instead of `&&` in room type filter condition.
@@ -143,3 +151,7 @@ This is the bug-hunt version. The following 10 seeded bugs are intentionally pre
 8. **Past check-in date allowed**: Date picker lacks minimum date constraint.
 9. **Missing required validation**: Submit allows empty fields without client error.
 10. **Shared carousel slider**: Arrow navigation moves all card carousels simultaneously.
+11. **Unchecked login credentials**: Authentication succeeds without validating password or email existence.
+12. **Server-side past booking allowed**: Booking API accepts past check-in dates without validation.
+13. **Unvalidated API payloads**: Backend endpoints bypass validator checks and persist invalid inputs.
+14. **Deterministic OTP generation**: Email verification code generator returns the identical code for all requests.

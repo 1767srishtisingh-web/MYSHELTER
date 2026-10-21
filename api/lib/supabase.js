@@ -1,11 +1,24 @@
 'use strict';
 
-const { createClient } = require('@supabase/supabase-js');
+let createClient = null;
+try {
+  createClient = require('@supabase/supabase-js').createClient;
+} catch (e) {
+  // In offline dev or before npm install, createClient will be null
+}
 
 let cachedClient = null;
 
 function getSupabase() {
   if (cachedClient) return cachedClient;
+
+  if (!createClient) {
+    try {
+      createClient = require('@supabase/supabase-js').createClient;
+    } catch (e) {
+      return null;
+    }
+  }
 
   const url = process.env.SUPABASE_URL;
   // Service role key has admin rights to bypass RLS, fallback to anon key if service role is not provided
@@ -26,4 +39,3 @@ function getSupabase() {
 }
 
 module.exports = { getSupabase };
-

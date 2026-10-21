@@ -2,11 +2,12 @@
 
 const { getSupabase } = require('../lib/supabase');
 const { getUserFromReq } = require('../lib/auth');
+const { json, error } = require('../lib/respond');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
-    return res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return error(res, 405, 'Method not allowed');
   }
 
   let body = req.body;
@@ -17,12 +18,12 @@ module.exports = async function handler(req, res) {
 
   const bookingId = body.bookingId;
   if (!bookingId) {
-    return res.status(400).json({ ok: false, error: 'Booking ID required.' });
+    return error(res, 400, 'Booking ID required.');
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(503).json({ ok: false, error: 'Database not connected.' });
+    return error(res, 503, 'Database not connected.');
   }
 
   try {
@@ -37,17 +38,16 @@ module.exports = async function handler(req, res) {
       query = query.eq('user_id', user.userId);
     }
 
-    const { data, error } = await query.select();
+    const { data, error: cancelError } = await query.select();
 
-    if (error) {
-      console.error('Error cancelling booking:', error);
-      return res.status(500).json({ ok: false, error: 'Could not cancel booking: ' + error.message });
+    if (cancelError) {
+      console.error('Error cancelling booking:', cancelError);
+      return error(res, 500, 'Could not cancel booking: ' + cancelError.message);
     }
 
-    return res.status(200).json({ ok: true, cancelled: bookingId });
+    return json(res, 200, { ok: true, cancelled: bookingId });
   } catch (err) {
     console.error('Cancel booking server error:', err);
-    return res.status(500).json({ ok: false, error: 'Server error processing cancellation.' });
+    return error(res, 500, 'Server error processing cancellation.');
   }
 };
-
