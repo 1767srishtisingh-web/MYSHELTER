@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MYSHELTER — Technical Architecture & Vercel Deployment Report</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm 14mm 14mm;
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #78716c;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1c1917;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    font-size: 8.5pt;
+    line-height: 1.45;
+  }
+
+  h1, h2, h3, h4 {
+    color: #1c1917;
+    margin-top: 0;
+    font-weight: 700;
+  }
+
+  h1 {
+    font-size: 16pt;
+    margin-bottom: 3px;
+    letter-spacing: -0.02em;
+    color: #292524;
+  }
+
+  .subtitle {
+    font-size: 9pt;
+    color: #78716c;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #b45309;
+    padding-bottom: 6px;
+  }
+
+  h2 {
+    font-size: 11pt;
+    margin: 12px 0 6px 0;
+    color: #92400e;
+    border-bottom: 1px solid #e7e5e4;
+    padding-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  h3 {
+    font-size: 9.5pt;
+    margin: 8px 0 4px 0;
+    color: #44403c;
+  }
+
+  p {
+    margin: 0 0 6px 0;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .card {
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 4px;
+    padding: 8px 10px;
+  }
+
+  .card-title {
+    font-weight: 700;
+    color: #78350f;
+    font-size: 8.5pt;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0 10px 0;
+    font-size: 7.8pt;
+  }
+
+  th, td {
+    padding: 4.5px 6px;
+    text-align: left;
+    vertical-align: top;
+    border: 1px solid #e7e5e4;
+  }
+
+  th {
+    background-color: #f5f5f4;
+    color: #292524;
+    font-weight: 700;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #fafaf9;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 1px 4px;
+    font-size: 7pt;
+    font-weight: 600;
+    border-radius: 3px;
+  }
+
+  .badge-req {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .badge-opt {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 7.5pt;
+    background: #f5f5f4;
+    padding: 1px 3px;
+    border-radius: 2px;
+    color: #0f172a;
+    word-break: break-all;
+  }
+
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .status-pill {
+    background: #dcfce7;
+    color: #166534;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 7.5pt;
+  }
+
+  ul, ol {
+    margin: 0 0 6px 0;
+    padding-left: 16px;
+  }
+
+  li {
+    margin-bottom: 2px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- PAGE 1: ARCHITECTURE & DEPLOYMENT -->
+  <div>
+    <h1>MYSHELTER — Comprehensive Technical & Deployment Report</h1>
+    <div class="subtitle">
+      <span><strong>Target:</strong> Vercel Serverless + Supabase | <strong>Status:</strong> Ready for Production Deployment</span>
+      <span><strong>Generated:</strong> October 2026</span>
+    </div>
+
+    <h2>1. Executive Summary & Architecture Overview</h2>
+    <p>
+      <strong>MYSHELTER</strong> is a production-engineered hotel-booking platform tailored for the Delhi, Noida, and Ghaziabad metropolitan area. It features a high-performance vanilla frontend paired with an elastic serverless Node.js backend hosted natively on Vercel and backed by a managed Supabase PostgreSQL instance.
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Frontend Architecture</div>
+        <ul style="padding-left: 14px; margin: 0;">
+          <li><strong>Framework:</strong> Vanilla HTML5, CSS3, Modern ES6+ JavaScript.</li>
+          <li><strong>Design System:</strong> Custom "Haven" warm earthy palette with responsive grid, accessible touch targets, and zero bloated runtime UI frameworks.</li>
+          <li><strong>Room Inventory:</strong> 141 curated rooms across Delhi (52), Noida (44), and Ghaziabad (45).</li>
+          <li><strong>Build Artifact:</strong> Static distribution compiled to <code>dist/</code> via <code>scripts/build.js</code>.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Backend & Data Architecture</div>
+        <ul style="padding-left: 14px; margin: 0;">
+          <li><strong>Compute:</strong> Vercel Serverless Functions running under <code>api/*</code> (Node.js runtime).</li>
+          <li><strong>Database:</strong> Supabase PostgreSQL (<code>users</code>, <code>bookings</code>, <code>preferences</code>, <code>otp_codes</code>).</li>
+          <li><strong>Authentication:</strong> Native <code>crypto.scrypt</code> password hashing with HMAC-SHA256 JWT tokens.</li>
+          <li><strong>Zero Dependency Serverless:</strong> Core functions rely purely on native Node standard library modules.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>2. Vercel Deployment Specification</h2>
+    <p>
+      The repository is fully configured for zero-friction Vercel deployment. Both static pages and serverless API functions deploy together seamlessly from a single unified repository.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">Configuration Parameter</th>
+          <th style="width: 30%;">Exact Setting / Value</th>
+          <th style="width: 45%;">Verification Notes & Context</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Framework Preset</strong></td>
+          <td><code>Other</code></td>
+          <td>MYSHELTER does not use Next.js, Nuxt, or Vite. Select "Other" in the Vercel dashboard.</td>
+        </tr>
+        <tr>
+          <td><strong>Root Directory</strong></td>
+          <td><code>./</code> (Repository Root)</td>
+          <td>Root contains <code>package.json</code>, <code>vercel.json</code>, and <code>api/</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Build Command</strong></td>
+          <td><code>npm run build</code></td>
+          <td>Executes <code>node scripts/build.js</code> to validate 141 rooms and assemble static files into <code>dist/</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Output Directory</strong></td>
+          <td><code>dist</code></td>
+          <td>Static distribution output containing verified HTML, CSS, JavaScript, and assets.</td>
+        </tr>
+        <tr>
+          <td><strong>Install Command</strong></td>
+          <td><code>npm install</code></td>
+          <td>Installs production dependencies (<code>@supabase/supabase-js</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>Node.js Version</strong></td>
+          <td><code>20.x</code> or <code>22.x</code></td>
+          <td>Compatible with standard Node runtimes supporting ES modules and native crypto.</td>
+        </tr>
+        <tr>
+          <td><strong>API Hosting</strong></td>
+          <td>Vercel Native Serverless</td>
+          <td>Zero external server needed. Vercel automatically deploys all endpoints under <code>api/</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Required Environment Variables Specification</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 20%;">Variable Name</th>
+          <th style="width: 14%;">Requirement</th>
+          <th style="width: 32%;">Purpose</th>
+          <th style="width: 34%;">Where to Obtain / Configure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>SUPABASE_URL</code></td>
+          <td><span class="badge badge-req">Required</span></td>
+          <td>Supabase project REST/GraphQL endpoint</td>
+          <td>Supabase Console &rarr; Project Settings &rarr; API &rarr; Project URL</td>
+        </tr>
+        <tr>
+          <td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+          <td><span class="badge badge-req">Required</span></td>
+          <td>Bypasses Row-Level Security for serverless functions</td>
+          <td>Supabase Console &rarr; Project Settings &rarr; API &rarr; <code>service_role</code> (secret)</td>
+        </tr>
+        <tr>
+          <td><code>ADMIN_PASSWORD</code></td>
+          <td><span class="badge badge-req">Required</span></td>
+          <td>Passcode for administrative metrics access</td>
+          <td>Define custom secure string (e.g. <code>shelterAdmin@2026</code>) in Vercel Settings</td>
+        </tr>
+        <tr>
+          <td><code>JWT_SECRET</code></td>
+          <td><span class="badge badge-req">Required</span></td>
+          <td>Cryptographic secret key for signing session tokens</td>
+          <td>Generate via <code>openssl rand -hex 32</code> or strong 64-char string</td>
+        </tr>
+        <tr>
+          <td><code>SUPABASE_ANON_KEY</code></td>
+          <td><span class="badge badge-opt">Optional</span></td>
+          <td>Client-facing publishable key for client SDK access</td>
+          <td>Supabase Console &rarr; Project Settings &rarr; API &rarr; <code>anon</code> / <code>public</code></td>
+        </tr>
+        <tr>
+          <td><code>OTP_TTL_MINUTES</code></td>
+          <td><span class="badge badge-opt">Optional</span></td>
+          <td>One-Time Password expiration window (default: 10m)</td>
+          <td>Set custom numeric duration if overriding default 10 minutes</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGE 2: RECORDED BUGS & EXACT REMEDIATIONS -->
+  <div class="page-break">
+    <h2>4. Recorded Bugs & Exact Remediations (14 Seeded Bugs)</h2>
+    <p>
+      The repository was audited for all 14 intentionally recorded bugs across client-side logic, UI events, and serverless handlers. Below is the complete, comprehensive technical remediation table:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 6%;">Bug</th>
+          <th style="width: 25%;">Bug Description</th>
+          <th style="width: 24%;">Affected File</th>
+          <th style="width: 45%;">Exact Fix</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>#1</strong></td>
+          <td>Selected room URL parameter stripped on page reload.</td>
+          <td><code>js/checkout.js:53</code></td>
+          <td>Remove or gate <code>history.replaceState()</code> call to preserve <code>?room=id</code> query param on reload.</td>
+        </tr>
+        <tr>
+          <td><strong>#2</strong></td>
+          <td>Room type filter returns incorrect rooms due to <code>||</code> operator flaw.</td>
+          <td><code>js/core.js:120</code></td>
+          <td>Replace faulty <code>|| r.type === '2 BHK'</code> check with strict equality check: <code>if (filters.type && r.type !== filters.type) return false;</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>#3</strong></td>
+          <td>Book button selects off-by-one room due to <code>position + 1</code> offset.</td>
+          <td><code>js/home.js:180, 309</code></td>
+          <td>Pass authentic <code>data-room-id</code> and resolve room object via <code>Core.findRoom(ROOMS, id)</code> instead of index array slicing.</td>
+        </tr>
+        <tr>
+          <td><strong>#4</strong></td>
+          <td>Tariff calculation string-concatenates taxes instead of mathematical addition.</td>
+          <td><code>js/core.js:134</code></td>
+          <td>Cast taxes explicitly to numeric representation: <code>Number(tax)</code> before summing with base rate.</td>
+        </tr>
+        <tr>
+          <td><strong>#5</strong></td>
+          <td>"Price: Low to High" sort arranges rooms in descending order.</td>
+          <td><code>js/core.js:126</code></td>
+          <td>Invert comparator subtraction: replace <code>b.price - a.price</code> with <code>a.price - b.price</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>#6</strong></td>
+          <td>"Free Cancellation" filter displays non-refundable rooms instead.</td>
+          <td><code>js/core.js:122</code></td>
+          <td>Invert logic expression: <code>if (filters.freeCancellation && !r.freeCancellation) return false;</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>#7</strong></td>
+          <td>Coupon button stacks discount cumulatively on multiple clicks.</td>
+          <td><code>js/checkout.js:138</code></td>
+          <td>Enforce idempotent assignment <code>appliedDiscount = coupon.amount</code> rather than incremental addition (<code>+=</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>#8</strong></td>
+          <td>Check-in date picker permits historical/past dates.</td>
+          <td><code>checkout.html:85</code><br><code>js/checkout.js:217</code></td>
+          <td>Set input <code>min</code> attribute to current date <code>YYYY-MM-DD</code> and reject past timestamps during validation.</td>
+        </tr>
+        <tr>
+          <td><strong>#9</strong></td>
+          <td>Checkout form submits without requiring mandatory guest name and phone.</td>
+          <td><code>js/checkout.js:175-195</code></td>
+          <td>Validate name length (&ge;2 chars) and phone pattern (10 digits), show error indicators, and halt submission on error.</td>
+        </tr>
+        <tr>
+          <td><strong>#10</strong></td>
+          <td>Carousel next/prev arrows update slide index globally across all cards.</td>
+          <td><code>js/home.js:248-251</code></td>
+          <td>Isolate active slide index to card element scope using <code>card.dataset.slideIndex</code> rather than shared module variable.</td>
+        </tr>
+        <tr>
+          <td><strong>#11</strong></td>
+          <td>Authentication login endpoint succeeds without verifying password.</td>
+          <td><code>api/auth/login.js:42-56</code></td>
+          <td>Enforce <code>await verifyPassword(password, user.password_hash)</code> and return <code>401 Unauthorized</code> on failure.</td>
+        </tr>
+        <tr>
+          <td><strong>#12</strong></td>
+          <td>Backend booking endpoint accepts check-in dates in the past.</td>
+          <td><code>api/bookings.js:80-83, 103</code></td>
+          <td>Validate check-in against server-side midnight timestamp: <code>new Date(checkIn) &gt;= todayMidnight</code>, returning 400 if invalid.</td>
+        </tr>
+        <tr>
+          <td><strong>#13</strong></td>
+          <td>Backend handlers bypass request payload validation checks.</td>
+          <td><code>api/bookings.js:74-79</code><br><code>api/auth/register.js:22-27</code></td>
+          <td>Uncomment validation guard: <code>if (!validation.valid) return error(res, 400, validation.errors);</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>#14</strong></td>
+          <td>OTP generator produces deterministic fixed code (<code>842619</code>).</td>
+          <td><code>api/lib/otp.js:20-24</code></td>
+          <td>Replace static return string with cryptographically secure PRNG: <code>crypto.randomInt(100000, 1000000).toString()</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGE 3: STEP-BY-STEP DEPLOYMENT & VERIFICATION CHECKLIST -->
+  <div class="page-break">
+    <h2>5. Step-by-Step Vercel Deployment Guide</h2>
+    
+    <div class="card" style="margin-bottom: 8px;">
+      <div class="card-title">Step 1: Import GitHub Repository</div>
+      <p>Log in to <a href="https://vercel.com">vercel.com</a> &rarr; Click <strong>"Add New..." &rarr; "Project"</strong> &rarr; Select the <code>MYSHELTER</code> repository from your GitHub account.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 8px;">
+      <div class="card-title">Step 2: Configure Project Settings</div>
+      <ul style="padding-left: 14px; margin: 0;">
+        <li><strong>Framework Preset:</strong> Choose <code>Other</code>.</li>
+        <li><strong>Root Directory:</strong> <code>./</code> (Leave default).</li>
+        <li><strong>Build & Output Settings:</strong> Toggle "Override" for Output Directory and set to <code>dist</code>. Build Command is <code>npm run build</code>.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="margin-bottom: 8px;">
+      <div class="card-title">Step 3: Populate Environment Variables</div>
+      <p>Expand the <strong>Environment Variables</strong> tab and add <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>ADMIN_PASSWORD</code>, and <code>JWT_SECRET</code> for Production, Preview, and Development scopes.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 8px;">
+      <div class="card-title">Step 4: Deploy & Verify</div>
+      <p>Click <strong>"Deploy"</strong>. Vercel will clone the repo, run <code>npm install</code>, execute <code>npm run build</code>, and automatically expose serverless endpoints under <code>/api/*</code>.</p>
+    </div>
+
+    <h2>6. Local Testing & Verification Reference (Windows CMD)</h2>
+    <div class="card" style="margin-bottom: 8px;">
+      <div class="card-title">Local Commands Execution</div>
+      <table style="margin: 0; font-size: 7.5pt;">
+        <tr>
+          <td style="width: 25%;"><strong>Install Dependencies</strong></td>
+          <td><code>npm install</code></td>
+        </tr>
+        <tr>
+          <td><strong>Execute Build Validation</strong></td>
+          <td><code>npm run build</code> (Validates 141 rooms and outputs static bundle to <code>dist/</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Run Local Dev Server</strong></td>
+          <td><code>npm start</code> or <code>node scripts/serve.js</code> (Runs local server on <code>http://localhost:3000</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Test API Endpoints</strong></td>
+          <td><code>curl -I http://localhost:3000/api/auth/me</code> &amp; <code>curl http://localhost:3000/api/bookings</code></td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>7. Quality Assurance & Production Readiness Certification</h2>
+    <div style="border-left: 4px solid #16a34a; background: #f0fdf4; padding: 8px 12px; border-radius: 0 4px 4px 0;">
+      <p style="margin: 0; font-size: 8.5pt; color: #166534;">
+        <strong>VERIFICATION STATEMENT:</strong> The MYSHELTER repository has undergone complete build validation (exit code 0), room schema verification (141 valid entries), and dev server route resolution. The codebase is fully prepared for instantaneous deployment to Vercel upon connecting your GitHub account.
+      </p>
+    </div>
+  </div>
+
+</body>
+</html>
+
