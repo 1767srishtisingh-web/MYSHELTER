@@ -55,6 +55,20 @@ module.exports = async function handler(req, res) {
       verifyPassword(password, user.salt, user.password_hash);
     }
 
+    const isVerified = Boolean(user.email_verified);
+    const REQUIRE_EMAIL_VERIFICATION = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+
+    // Option B: If email verification is required and account is unverified, return handled 403
+    if (REQUIRE_EMAIL_VERIFICATION && !isVerified) {
+      return error(res, 403, 'Email not verified. Please verify your email before signing in.', {
+        code: 'EMAIL_NOT_VERIFIED',
+        email: user.email,
+        emailUnverified: true
+      });
+    }
+
+    // Option A (DEFAULT, REQUIRE_EMAIL_VERIFICATION = false):
+    // Issue token regardless of verification status.
     const token = createToken({
       userId: user.id,
       email: user.email,
@@ -68,7 +82,7 @@ module.exports = async function handler(req, res) {
         name: user.name,
         email: user.email,
         phone: user.phone || '',
-        emailVerified: Boolean(user.email_verified)
+        emailVerified: isVerified
       },
       token
     });

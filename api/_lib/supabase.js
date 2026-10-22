@@ -64,6 +64,31 @@ class MemoryQueryBuilder {
     return this;
   }
 
+  neq(col, val) {
+    this._filters.push((item) => item[col] !== val);
+    return this;
+  }
+
+  gt(col, val) {
+    this._filters.push((item) => item[col] > val);
+    return this;
+  }
+
+  gte(col, val) {
+    this._filters.push((item) => item[col] >= val);
+    return this;
+  }
+
+  lt(col, val) {
+    this._filters.push((item) => item[col] < val);
+    return this;
+  }
+
+  lte(col, val) {
+    this._filters.push((item) => item[col] <= val);
+    return this;
+  }
+
   order(col, opts) {
     this._orderCol = col;
     this._orderAsc = opts ? opts.ascending !== false : true;

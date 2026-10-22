@@ -129,6 +129,7 @@ Configure these variables in Vercel under **Project Settings** → **Environment
 | `ADMIN_PASSWORD` | **Required** | Production, Preview, Development | Backend Serverless (SECRET) | Set custom string (Default: `admin2026`) | Secret password required to unlock the Admin Portal at `/admin`. |
 | `JWT_SECRET` | **Required** | Production, Preview, Development | Backend Serverless (SECRET) | Generate random 32+ char string | Secret key used to sign and verify HMAC-SHA256 session tokens. |
 | `OTP_TTL_MINUTES` | Optional | Production, Preview, Development | Backend Serverless | Numeric value (e.g. `10`) | Lifespan in minutes for email verification OTP codes (defaults to 10). |
+| `REQUIRE_EMAIL_VERIFICATION` | Optional | Production, Preview, Development | Backend Serverless | `false` (default) or `true` | When `false` (Option A, default), email verification is non-blocking. When `true` (Option B), login returns 403 until OTP is verified. |
 
 ---
 

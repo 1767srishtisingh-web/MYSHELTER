@@ -154,7 +154,17 @@ async function verifyOtp(email, code, purpose = 'verification') {
   }
 
   if (verified) {
-    return { valid: true };
+    if (supabase) {
+      try {
+        await supabase
+          .from('users')
+          .update({ email_verified: true })
+          .eq('email', normEmail);
+      } catch (e) {
+        console.warn('Could not update user email_verified in verifyOtp:', e.message);
+      }
+    }
+    return { valid: true, email: normEmail };
   }
 
   return { valid: false, error: 'Invalid or expired verification code.' };

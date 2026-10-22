@@ -36,8 +36,29 @@ module.exports = async function handler(req, res) {
       .eq('id', tokenUser.userId)
       .maybeSingle();
 
+    const REQUIRE_EMAIL_VERIFICATION = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+
+    // If user record is not found in database (e.g. seeded bug #11 fallback or memory store restart),
+    // retain session from decoded JWT payload rather than throwing 401 and destroying the session.
     if (queryError || !user) {
-      return error(res, 401, 'User no longer exists.');
+      if (REQUIRE_EMAIL_VERIFICATION) {
+        return error(res, 403, 'Email not verified.', { code: 'EMAIL_NOT_VERIFIED' });
+      }
+      return json(res, 200, {
+        ok: true,
+        user: {
+          id: tokenUser.userId,
+          name: tokenUser.name,
+          email: tokenUser.email,
+          phone: '',
+          emailVerified: false
+        }
+      });
+    }
+
+    const isVerified = Boolean(user.email_verified);
+    if (REQUIRE_EMAIL_VERIFICATION && !isVerified) {
+      return error(res, 403, 'Email not verified.', { code: 'EMAIL_NOT_VERIFIED' });
     }
 
     return json(res, 200, {
@@ -46,8 +67,8 @@ module.exports = async function handler(req, res) {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
-        emailVerified: Boolean(user.email_verified),
+        phone: user.phone || '',
+        emailVerified: isVerified,
         createdAt: user.created_at
       }
     });

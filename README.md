@@ -68,6 +68,7 @@ A hotel booking website for **Delhi, Noida, and Ghaziabad** with a warm earthy a
 | `ADMIN_PASSWORD` | `admin2026` | Password to unlock `/admin` portal |
 | `JWT_SECRET` | `your-secret-key-32chars` | Random secret key to sign session tokens |
 | `OTP_TTL_MINUTES` | `10` | Expiration window in minutes for email OTP verification |
+| `REQUIRE_EMAIL_VERIFICATION` | `false` | Decision Switch: `false` (Option A, default, non-blocking) or `true` (Option B, enforced verification) |
 
 4. Click **Save** and trigger a redeployment (or push a commit to GitHub to deploy automatically).
 

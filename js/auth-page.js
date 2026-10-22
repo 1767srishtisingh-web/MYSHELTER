@@ -144,6 +144,119 @@ document.addEventListener('DOMContentLoaded', function () {
   var params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'register') switchTab('register');
 
+  function openOtpModal(email, title, desc, callback) {
+    var regModal = document.getElementById('reg-success-dialog');
+    var titleEl = document.getElementById('reg-success-title');
+    var descEl = document.getElementById('reg-modal-desc');
+    var nameEl = document.getElementById('reg-modal-name');
+    var emailEl = document.getElementById('reg-modal-email');
+    var phoneEl = document.getElementById('reg-modal-phone');
+    var continueBtn = document.getElementById('reg-modal-continue-btn');
+
+    var otpCodeInput = document.getElementById('otp-code-input');
+    var otpVerifyBtn = document.getElementById('otp-verify-btn');
+    var otpCodeError = document.getElementById('otp-code-error');
+    var otpVerifiedState = document.getElementById('otp-verified-state');
+    var otpResendBtn = document.getElementById('otp-resend-btn');
+
+    if (titleEl && title) titleEl.textContent = title;
+    if (descEl && desc) descEl.textContent = desc;
+    if (emailEl) emailEl.textContent = email;
+    if (otpCodeError) otpCodeError.textContent = '';
+    if (otpCodeInput) {
+      otpCodeInput.value = '';
+      otpCodeInput.disabled = false;
+    }
+    if (otpVerifyBtn) {
+      otpVerifyBtn.style.display = 'inline-block';
+      otpVerifyBtn.disabled = false;
+      otpVerifyBtn.textContent = 'Verify';
+    }
+    if (otpVerifiedState) otpVerifiedState.style.display = 'none';
+
+    // Send verification code
+    window.MyShelterAuth.sendOtp(email).catch(function (e) {
+      console.warn('Could not send OTP:', e);
+    });
+
+    if (otpVerifyBtn) {
+      otpVerifyBtn.onclick = async function () {
+        var code = otpCodeInput ? otpCodeInput.value.trim() : '';
+        if (!code) {
+          if (otpCodeError) otpCodeError.textContent = 'Please enter the 6-digit code.';
+          return;
+        }
+        if (otpCodeError) otpCodeError.textContent = '';
+        otpVerifyBtn.disabled = true;
+        otpVerifyBtn.textContent = 'Verifying…';
+
+        try {
+          var verifyRes = await window.MyShelterAuth.verifyOtp(email, code);
+          if (verifyRes.ok && verifyRes.verified) {
+            if (otpVerifiedState) otpVerifiedState.style.display = 'block';
+            if (otpCodeInput) otpCodeInput.disabled = true;
+            otpVerifyBtn.style.display = 'none';
+            if (window.MyShelterUI) window.MyShelterUI.toast('Email verified successfully!', 'success');
+            if (continueBtn) continueBtn.textContent = 'Continue to Rooms';
+            if (typeof callback === 'function') callback(verifyRes);
+          } else {
+            if (otpCodeError) otpCodeError.textContent = verifyRes.error || 'Invalid or expired code.';
+          }
+        } catch (err) {
+          if (otpCodeError) otpCodeError.textContent = 'Verification error. Please try again.';
+        } finally {
+          otpVerifyBtn.disabled = false;
+          if (otpVerifyBtn.style.display !== 'none') otpVerifyBtn.textContent = 'Verify';
+        }
+      };
+    }
+
+    if (otpResendBtn) {
+      otpResendBtn.onclick = async function () {
+        if (otpCodeError) otpCodeError.textContent = '';
+        otpResendBtn.disabled = true;
+        otpResendBtn.textContent = 'Sending…';
+        try {
+          var sendRes = await window.MyShelterAuth.sendOtp(email);
+          if (sendRes.ok) {
+            if (window.MyShelterUI) window.MyShelterUI.toast('Verification code sent to ' + email, 'success');
+          } else {
+            if (otpCodeError) otpCodeError.textContent = sendRes.error || 'Failed to resend code.';
+          }
+        } catch (e) {
+          if (otpCodeError) otpCodeError.textContent = 'Network error resending code.';
+        } finally {
+          otpResendBtn.disabled = false;
+          otpResendBtn.textContent = 'Resend OTP';
+        }
+      };
+    }
+
+    if (regModal && typeof regModal.showModal === 'function') {
+      regModal.showModal();
+
+      if (continueBtn) {
+        continueBtn.onclick = function () {
+          regModal.close();
+          if (window.MyShelterAuth.getToken()) {
+            window.location.replace('index.html');
+          } else {
+            switchTab('login');
+          }
+        };
+      }
+
+      regModal.onclick = function (e) {
+        if (e.target === regModal) {
+          regModal.close();
+          if (window.MyShelterAuth.getToken()) {
+            window.location.replace('index.html');
+          }
+        }
+      };
+    }
+  }
+
   // 1. Sign In submission
   var loginForm = document.getElementById('login-form');
   var loginBtn = document.getElementById('login-btn');
@@ -166,9 +279,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
       try {
         var res = await window.MyShelterAuth.login(email, password);
-        if (res.ok) {
-          window.MyShelterUI.toast('Welcome back, ' + res.user.name.split(' ')[0] + '!', 'success');
-          setTimeout(function () { window.location.replace('index.html'); }, 400);
+        if (res.ok && res.token) {
+          // Confirm token is stored in localStorage before redirecting
+          var storedToken = window.MyShelterAuth.getToken();
+          if (!storedToken || typeof storedToken !== 'string' || storedToken.trim().length === 0) {
+            loginPassErr.textContent = 'Session could not be saved. Please try again.';
+            return;
+          }
+          window.MyShelterUI.toast('Welcome back, ' + ((res.user && res.user.name) ? res.user.name.split(' ')[0] : 'User') + '!', 'success');
+          setTimeout(function () { window.location.replace('index.html'); }, 200);
+        } else if (res.code === 'EMAIL_NOT_VERIFIED' || res.status === 403) {
+          // Option B: Route to OTP verification UI without dead-ending or ping-ponging
+          loginPassErr.textContent = 'Email verification required. Please verify your email.';
+          openOtpModal(email, 'Email Verification Required', 'Please enter the 6-digit code sent to your email to verify your account and sign in.');
         } else {
           var err = res.error || (res.errors && (res.errors.email || res.errors.password)) || 'Sign in failed.';
           if (res.field === 'email' || /email/i.test(err)) {
@@ -234,101 +357,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (res.ok) {
           var registeredEmail = res.user.email;
-          var regModal = document.getElementById('reg-success-dialog');
           var nameEl = document.getElementById('reg-modal-name');
-          var emailEl = document.getElementById('reg-modal-email');
           var phoneEl = document.getElementById('reg-modal-phone');
-          var continueBtn = document.getElementById('reg-modal-continue-btn');
-
-          var otpCodeInput = document.getElementById('otp-code-input');
-          var otpVerifyBtn = document.getElementById('otp-verify-btn');
-          var otpCodeError = document.getElementById('otp-code-error');
-          var otpVerifiedState = document.getElementById('otp-verified-state');
-          var otpResendBtn = document.getElementById('otp-resend-btn');
-
           if (nameEl) nameEl.textContent = res.user.name;
-          if (emailEl) emailEl.textContent = res.user.email;
           if (phoneEl) phoneEl.textContent = res.user.phone ? '+91 ' + res.user.phone : '—';
 
-          // Request initial OTP for the new account
-          try {
-            await window.MyShelterAuth.sendOtp(registeredEmail);
-          } catch (e) {
-            console.warn('Initial OTP request note:', e);
-          }
-
-          // Setup OTP verify action
-          if (otpVerifyBtn) {
-            otpVerifyBtn.onclick = async function () {
-              var code = otpCodeInput ? otpCodeInput.value.trim() : '';
-              if (!code) {
-                if (otpCodeError) otpCodeError.textContent = 'Please enter the 6-digit code.';
-                return;
-              }
-              if (otpCodeError) otpCodeError.textContent = '';
-              otpVerifyBtn.disabled = true;
-              otpVerifyBtn.textContent = 'Verifying…';
-
-              try {
-                var verifyRes = await window.MyShelterAuth.verifyOtp(registeredEmail, code);
-                if (verifyRes.ok && verifyRes.verified) {
-                  if (otpVerifiedState) otpVerifiedState.style.display = 'block';
-                  if (otpCodeInput) otpCodeInput.disabled = true;
-                  otpVerifyBtn.style.display = 'none';
-                  if (window.MyShelterUI) window.MyShelterUI.toast('Email verified successfully!', 'success');
-                } else {
-                  if (otpCodeError) otpCodeError.textContent = verifyRes.error || 'Invalid or expired code.';
-                }
-              } catch (err) {
-                if (otpCodeError) otpCodeError.textContent = 'Verification error. Please try again.';
-              } finally {
-                otpVerifyBtn.disabled = false;
-                if (otpVerifyBtn.style.display !== 'none') otpVerifyBtn.textContent = 'Verify';
-              }
-            };
-          }
-
-          // Setup OTP resend action
-          if (otpResendBtn) {
-            otpResendBtn.onclick = async function () {
-              if (otpCodeError) otpCodeError.textContent = '';
-              otpResendBtn.disabled = true;
-              otpResendBtn.textContent = 'Sending…';
-              try {
-                var sendRes = await window.MyShelterAuth.sendOtp(registeredEmail);
-                if (sendRes.ok) {
-                  if (window.MyShelterUI) window.MyShelterUI.toast('Verification code sent to ' + registeredEmail, 'success');
-                } else {
-                  if (otpCodeError) otpCodeError.textContent = sendRes.error || 'Failed to resend code.';
-                }
-              } catch (e) {
-                if (otpCodeError) otpCodeError.textContent = 'Network error resending code.';
-              } finally {
-                otpResendBtn.disabled = false;
-                otpResendBtn.textContent = 'Resend OTP';
-              }
-            };
-          }
-
-          if (regModal && typeof regModal.showModal === 'function') {
-            regModal.showModal();
-
-            if (continueBtn) {
-              continueBtn.onclick = function () {
-                window.location.replace('index.html');
-              };
+          // Open the verification dialog
+          openOtpModal(
+            registeredEmail,
+            'Registration Successful',
+            'Your account has been created. You can verify your email now or continue to explore rooms.',
+            function (verifyRes) {
+              if (window.MyShelterUI) window.MyShelterUI.toast('Welcome to MYSHELTER!', 'success');
             }
-
-            regModal.onclick = function (e) {
-              if (e.target === regModal) {
-                regModal.close();
-                window.location.replace('index.html');
-              }
-            };
-          } else {
-            window.MyShelterUI.toast('Account created! Welcome, ' + res.user.name.split(' ')[0] + '.', 'success');
-            setTimeout(function () { window.location.replace('index.html'); }, 500);
-          }
+          );
         } else {
           if (res.errors) {
             if (res.errors.name) regNameErr.textContent = res.errors.name;

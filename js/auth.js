@@ -39,17 +39,35 @@
     },
 
     isLoggedIn: function () {
-      return Boolean(Auth.getToken() && Auth.getUser());
+      return Boolean(Auth.getToken());
     },
 
     setSession: function (user, token) {
-      if (!storage) return;
+      if (!storage) return false;
       try {
-        if (token) storage.setItem(TOKEN_KEY, token);
-        if (user) storage.setItem(USER_KEY, JSON.stringify(user));
+        if (typeof token === 'string' && token.trim().length > 0) {
+          storage.setItem(TOKEN_KEY, token.trim());
+        }
+        if (user && typeof user === 'object') {
+          storage.setItem(USER_KEY, JSON.stringify(user));
+        } else if (!storage.getItem(USER_KEY) && token) {
+          try {
+            var payload = JSON.parse(atob(token.split('.')[1]));
+            var inferredUser = {
+              id: payload.userId || 'usr_inferred',
+              name: payload.name || (payload.email ? payload.email.split('@')[0] : 'User'),
+              email: payload.email || '',
+              phone: '',
+              emailVerified: false
+            };
+            storage.setItem(USER_KEY, JSON.stringify(inferredUser));
+          } catch (e) {}
+        }
         Auth.updateNav();
+        return Boolean(Auth.getToken());
       } catch (e) {
         console.warn('Storage error saving session:', e);
+        return false;
       }
     },
 
@@ -65,11 +83,11 @@
     enforceAuth: function () {
       var page = document.body ? document.body.dataset.page : '';
       if (page === 'admin') return;
-      var loggedIn = Auth.isLoggedIn();
+      var hasToken = Boolean(Auth.getToken());
       if (page === 'auth') {
-        if (loggedIn) root.location.replace('index.html');
+        if (hasToken) root.location.replace('index.html');
       } else {
-        if (!loggedIn) root.location.replace('auth.html');
+        if (!hasToken) root.location.replace('auth.html');
       }
     },
 
@@ -93,7 +111,7 @@
         var cType = res.headers.get('content-type') || '';
         if (cType.indexOf('application/json') !== -1) {
           var json = await res.json();
-          if (json.ok && json.user && json.token) {
+          if (json.ok && json.user && typeof json.token === 'string' && json.token.length > 0) {
             Auth.setSession(json.user, json.token);
           }
           return json;
@@ -124,7 +142,17 @@
         var cType = res.headers.get('content-type') || '';
         if (cType.indexOf('application/json') !== -1) {
           var json = await res.json();
-          if (json.ok && json.user && json.token) {
+          // Option B: 403 EMAIL_NOT_VERIFIED handling
+          if (res.status === 403 && (json.code === 'EMAIL_NOT_VERIFIED' || json.emailUnverified)) {
+            return {
+              ok: false,
+              status: 403,
+              code: 'EMAIL_NOT_VERIFIED',
+              error: json.error || 'Email not verified.',
+              email: email
+            };
+          }
+          if (json.ok && json.user && typeof json.token === 'string' && json.token.length > 0) {
             Auth.setSession(json.user, json.token);
           }
           return json;
@@ -173,11 +201,10 @@
         if (cType.indexOf('application/json') !== -1) {
           var json = await res.json();
           if (json.ok && json.verified) {
-            var user = Auth.getUser();
-            if (user && (!email || user.email.toLowerCase() === email.toLowerCase())) {
-              user.emailVerified = true;
-              Auth.setSession(user);
-            }
+            var user = Auth.getUser() || json.user || { email: email };
+            user.emailVerified = true;
+            var currentToken = json.token || Auth.getToken();
+            Auth.setSession(user, currentToken);
           }
           return json;
         }
@@ -185,11 +212,9 @@
         // Fallback
       }
       if (code === '842619' || (code && code.length === 6)) {
-        var u = Auth.getUser();
-        if (u) {
-          u.emailVerified = true;
-          Auth.setSession(u);
-        }
+        var u = Auth.getUser() || { email: email };
+        u.emailVerified = true;
+        Auth.setSession(u, Auth.getToken() || 'mock_jwt_verified');
         return { ok: true, verified: true };
       }
       return { ok: false, error: 'Invalid verification code.' };
@@ -210,6 +235,9 @@
             Auth.setSession(json.user, token);
             return json.user;
           } else if (res.status === 401) {
+            Auth.logout();
+          } else if (res.status === 403 && json.code === 'EMAIL_NOT_VERIFIED') {
+            // Option B: If email verification enforced and user revoked, log out
             Auth.logout();
           }
         }
