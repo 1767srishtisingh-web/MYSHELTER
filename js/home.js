@@ -1,6 +1,6 @@
-/*
- * MYSHELTER — Rooms page: search, filters, sort, cards and carousels.
- */
+
+
+
 (function () {
   'use strict';
 
@@ -17,10 +17,10 @@
 
   var state = Core.readFilters(window.location.search);
 
-  // which photo the carousels are showing
+
   var currentSlide = 0;
 
-  // rooms matching the current filters, and how many are on screen
+
   var currentList = [];
   var shown = 0;
 
@@ -38,7 +38,7 @@
     more: document.getElementById('show-more')
   };
 
-  /* ---------- static bits ---------- */
+
 
   function renderStats() {
     var minPrice = Math.min.apply(null, ROOMS.map(function (r) { return r.price; }));
@@ -128,13 +128,13 @@
   function update(patch) {
     Object.keys(patch).forEach(function (k) { state[k] = patch[k]; });
     var url = window.location.pathname + Core.writeFilters(state) + window.location.hash;
-    try { window.history.replaceState(null, '', url); } catch (e) { /* file:// in some browsers */ }
+    try { window.history.replaceState(null, '', url); } catch (e) {  }
     syncControls();
     render();
     saveUserPreferences();
   }
 
-  /* ---------- cards ---------- */
+
 
   var AMENITY_ICON = { breakfast: I.food, pool: I.pool, parking: I.parking };
 
@@ -227,7 +227,7 @@
     appendCards(PAGE_SIZE);
   }
 
-  /* ---------- carousel ---------- */
+
 
   function showSlide(card, index) {
     var imgs = card.querySelectorAll('.carousel-track img');
@@ -268,7 +268,7 @@
     });
     showSlide(card, currentSlide);
 
-    // Swipe on touch screens
+
     var startX = null;
     carousel.addEventListener('pointerdown', function (e) {
       if (e.pointerType !== 'mouse') startX = e.clientX;
@@ -286,7 +286,7 @@
     });
   }
 
-  /* ---------- events ---------- */
+
 
   els.grid.addEventListener('click', function (e) {
     var target = e.target.closest('button, a');
@@ -354,7 +354,7 @@
     update({ query: '', city: 'all', type: 'all', freeCancellation: false, amenities: [], sort: '' });
     UI.toast('Filters cleared');
   }
-  /* ---------- custom sort dropdown interaction ---------- */
+
   function wireCustomSort() {
     var wrap = document.getElementById('sort-dropdown-wrap');
     var trigger = document.getElementById('sort-trigger');
@@ -379,7 +379,7 @@
     function selectOption(option) {
       var val = option.dataset.value;
       if (els.sort.value === val) {
-        // Toggle off if already selected -> return to default order
+
         els.sort.value = '';
         syncCustomSort('');
         update({ sort: '' });
@@ -453,7 +453,7 @@
 
   els.clear.addEventListener('click', resetFilters);
 
-  /* ---------- boot ---------- */
+
   renderStats();
   renderAreaChips();
   renderOptionFilters();

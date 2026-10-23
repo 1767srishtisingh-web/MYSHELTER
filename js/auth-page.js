@@ -1,6 +1,6 @@
-/*
- * MYSHELTER — Auth Page Controller (auth.html)
- */
+
+
+
 document.addEventListener('DOMContentLoaded', function () {
   var tabLogin = document.getElementById('tab-login');
   var tabRegister = document.getElementById('tab-register');
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var signedInDetails = document.getElementById('signed-in-details');
   var signoutBtn = document.getElementById('auth-page-signout');
 
-  // Signed-in email verification elements
+
   var signedInVerifyContainer = document.getElementById('signed-in-verify-container');
   var signedInBadge = document.getElementById('signed-in-verified-badge');
   var signedInSendOtpBtn = document.getElementById('signed-in-send-otp-btn');
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   checkCurrentAuth();
 
-  // Signed-in email OTP verification triggers
+
   if (signedInSendOtpBtn) {
     signedInSendOtpBtn.addEventListener('click', async function () {
       var user = window.MyShelterAuth.getUser();
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (otpVerifiedState) otpVerifiedState.style.display = 'none';
 
-    // Send verification code
+
     window.MyShelterAuth.sendOtp(email).catch(function (e) {
       console.warn('Could not send OTP:', e);
     });
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // 1. Sign In submission
+
   var loginForm = document.getElementById('login-form');
   var loginBtn = document.getElementById('login-btn');
   var loginEmailErr = document.getElementById('login-email-error');
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
       try {
         var res = await window.MyShelterAuth.login(email, password);
         if (res.requireOtp) {
-          // Email and password verified; prompt for OTP before granting access
+
           openOtpModal(
             email,
             'Verify OTP to Sign In',
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 2. Register submission
+
   var regForm = document.getElementById('register-form');
   var regBtn = document.getElementById('reg-btn');
   var regNameErr = document.getElementById('reg-name-error');
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (nameEl) nameEl.textContent = res.user.name;
           if (phoneEl) phoneEl.textContent = res.user.phone ? '+91 ' + res.user.phone : '—';
 
-          // Open the verification dialog
+
           openOtpModal(
             registeredEmail,
             'Registration Successful',

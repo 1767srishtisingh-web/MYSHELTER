@@ -1,6 +1,6 @@
 'use strict';
 
-const { getSupabase } = require('../_lib/supabase');
+const { getDb } = require('../_lib/mongodb');
 const { verifyPassword, createToken } = require('../_lib/auth');
 const { sendOtp, verifyOtp } = require('../_lib/otp');
 const { json, error } = require('../_lib/respond');
@@ -25,23 +25,12 @@ module.exports = async function handler(req, res) {
     return error(res, 400, 'Please enter both email and password.');
   }
 
-  const supabase = getSupabase();
-
   try {
-    let user = null;
-    if (supabase) {
-      let { data: dbUser, error: findError } = await supabase
-        .from('users')
-        .select('id, name, email, phone, password_hash, salt')
-        .eq('email', email)
-        .maybeSingle();
+    const { db } = await getDb();
+    const usersCol = db.collection('users');
 
-      if (!findError && dbUser) {
-        user = dbUser;
-      }
-    }
+    const user = await usersCol.findOne({ email });
 
-    // 1. Require valid email and correct password
     if (!user) {
       return error(res, 401, 'Invalid email or password.');
     }
@@ -51,7 +40,8 @@ module.exports = async function handler(req, res) {
       return error(res, 401, 'Invalid email or password.');
     }
 
-    // 2. If OTP was provided in the login payload, verify it
+    const userId = user._id ? user._id.toString() : user.id;
+
     if (otp) {
       const otpResult = await verifyOtp(user.email, otp, 'login');
       if (!otpResult.valid) {
@@ -59,7 +49,7 @@ module.exports = async function handler(req, res) {
       }
 
       const token = createToken({
-        userId: user.id,
+        userId,
         email: user.email,
         name: user.name
       });
@@ -67,7 +57,7 @@ module.exports = async function handler(req, res) {
       return json(res, 200, {
         ok: true,
         user: {
-          id: user.id,
+          id: userId,
           name: user.name,
           email: user.email,
           phone: user.phone || '',
@@ -77,7 +67,6 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // 3. Credentials are valid; send common OTP to user's email address
     await sendOtp(user.email, 'login');
 
     return json(res, 200, {

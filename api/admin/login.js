@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
     return error(res, 401, 'Incorrect administrator password.');
   }
 
-  // Admin session token (valid 24 hours)
+
   const token = createToken({
     role: 'admin',
     isAdmin: true

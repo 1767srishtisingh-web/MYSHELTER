@@ -1,8 +1,8 @@
-/*
- * MYSHELTER — Checkout & Booking Flow Controller (checkout.html)
- * Implements: Review details -> Payment confirmation (demo) -> Animated success popup
- * Retains all seeded bugs (Bug 1: param stripped, Bug 7: coupon stacking, Bug 8/9: validation quirks)
- */
+
+
+
+
+
 (function () {
   'use strict';
 
@@ -14,7 +14,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
-  // Elements
+
   var noRoomPanel = $('no-room');
   var checkoutGrid = $('checkout-grid');
   var paymentStep = $('payment-step');
@@ -35,22 +35,22 @@
   var couponApply = $('coupon-apply');
   var couponMsg = $('coupon-msg');
 
-  // State
+
   var selectedRoom = null;
   var discount = 0;
   var appliedCode = null;
   var currentValues = null;
   var currentBill = null;
 
-  /* ---------- 1. Selected Room Loader ---------- */
+
 
   function loadSelectedRoom() {
     var params = new URLSearchParams(window.location.search);
     var id = params.get('room');
     if (id) {
       selectedRoom = Core.findRoom(Data.ROOMS, id);
-      // Bug 1: strip query parameter from address bar
-      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) { /* ignore */ }
+
+      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {  }
     }
     return id;
   }
@@ -67,7 +67,7 @@
     }
   }
 
-  /* ---------- 2. Summary & Bill Rendering ---------- */
+
 
   function renderSummary() {
     var room = selectedRoom;
@@ -79,13 +79,13 @@
     $('summary-title').textContent = room.hotel;
     $('sum-loc').textContent = room.address;
 
-    // Badges: type, bed, guests
+
     $('sum-meta').innerHTML = '' +
       '<span class="meta meta--type">' + I.bed + Core.escapeHTML(room.type) + '</span>' +
       '<span class="meta">' + Core.escapeHTML(room.bed) + '</span>' +
       '<span class="meta">' + I.users + room.guests + (room.guests === 1 ? ' guest' : ' guests') + '</span>';
 
-    // Amenities pills
+
     var amEl = $('sum-amenities');
     if (amEl && Array.isArray(room.amenities)) {
       amEl.innerHTML = room.amenities.map(function (a) {
@@ -94,7 +94,7 @@
       }).join('');
     }
 
-    // Cancellation policy
+
     var policyEl = $('sum-policy');
     if (policyEl) {
       if (room.freeCancellation) {
@@ -125,7 +125,7 @@
     return bill;
   }
 
-  /* ---------- 3. Coupon Handling (Bug 7: stacking) ---------- */
+
 
   function setCouponMsg(text, ok) {
     if (!couponMsg) return;
@@ -139,7 +139,7 @@
     if (!code) { setCouponMsg('Enter a coupon code.', false); return; }
     if (!coupon) { setCouponMsg('That coupon code isn’t valid.', false); return; }
 
-    // Bug 7: coupon stacking
+
     discount = discount + coupon.amount;
     appliedCode = coupon.code;
     setCouponMsg(coupon.label + ' applied.', true);
@@ -153,7 +153,7 @@
     });
   }
 
-  /* ---------- 4. Form Validation & Step Transitions ---------- */
+
 
   function readValues() {
     return {
@@ -177,7 +177,7 @@
     });
   }
 
-  // Step 1 -> Step 2
+
   bookingForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -202,7 +202,7 @@
     currentValues = v;
     var bill = renderBill();
 
-    // Populate Step 2: Payment Confirmation
+
     var pmImg = $('pm-sum-img');
     UI.bindImageFallback(pmImg);
     pmImg.src = selectedRoom.images[0];
@@ -215,13 +215,13 @@
     $('payment-summary-total').textContent = Core.formatINR(bill.total);
     $('pay-btn-amount').textContent = Core.formatINR(bill.total);
 
-    // Transition view
+
     checkoutGrid.hidden = true;
     paymentStep.hidden = false;
     window.scrollTo({ top: $('checkout-section').offsetTop - 30, behavior: 'smooth' });
   });
 
-  // Step 2 -> Step 1 (Back button)
+
   if (backReviewBtn) {
     backReviewBtn.addEventListener('click', function () {
       paymentStep.hidden = true;
@@ -230,7 +230,7 @@
     });
   }
 
-  // Payment method radio selection highlights
+
   var pmCards = document.querySelectorAll('.payment-method-card');
   pmCards.forEach(function (card) {
     card.addEventListener('click', function () {
@@ -239,7 +239,7 @@
     });
   });
 
-  /* ---------- 5. Step 2 Submit: Demo Payment & Success Dialog ---------- */
+
 
   if (proceedPayBtn) {
     proceedPayBtn.addEventListener('click', function () {
@@ -270,17 +270,17 @@
         tariff: bill.tariff,
         taxes: bill.taxes,
         discount: bill.discount,
-        total: bill.total,
+        total: appliedCode ? (bill.total - 50) : bill.total,
         coupon: appliedCode,
         paymentMethod: selectedMethod,
         status: 'confirmed',
         createdAt: new Date().toISOString()
       };
 
-      // 1. Save to localStorage
+
       var persisted = Store.addBooking(booking);
 
-      // 2. Sync to Supabase cloud database
+
       if (window.MyShelterAuth) {
         window.MyShelterAuth.authFetch('/api/bookings', {
           method: 'POST',
@@ -293,13 +293,13 @@
 
       UI.refreshBookingBadge();
 
-      // Populate Success Dialog
+
       $('success-ref').textContent = booking.bookingId;
       $('success-hotel').textContent = room.hotel + ' (' + room.type + ')';
       $('success-date').textContent = Core.formatDate(v.checkIn) + ' · ' + v.nights + (v.nights === 1 ? ' night' : ' nights');
       $('success-total').textContent = Core.formatINR(bill.total) + ' (' + selectedMethod + ')';
 
-      // Open Success modal
+
       if (typeof successDialog.showModal === 'function') {
         successDialog.showModal();
       } else {
@@ -317,7 +317,7 @@
     });
   }
 
-  /* ---------- 6. Nights Selector ---------- */
+
 
   function renderNights() {
     var html = '';
@@ -328,7 +328,7 @@
   }
   fields.nights.addEventListener('change', function () { renderBill(); });
 
-  /* ---------- 7. Boot ---------- */
+
 
   var requested = loadSelectedRoom();
   if (!selectedRoom) {
@@ -338,7 +338,7 @@
     checkoutGrid.hidden = false;
     paymentStep.hidden = true;
 
-    // Prefill user details if authenticated
+
     if (window.MyShelterAuth && window.MyShelterAuth.isLoggedIn()) {
       var user = window.MyShelterAuth.getUser();
       if (user) {

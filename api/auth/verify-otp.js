@@ -1,7 +1,7 @@
 'use strict';
 
 const { verifyOtp } = require('../_lib/otp');
-const { getSupabase } = require('../_lib/supabase');
+const { getDb } = require('../_lib/mongodb');
 const { createToken } = require('../_lib/auth');
 const { json, error } = require('../_lib/respond');
 
@@ -30,43 +30,37 @@ module.exports = async function handler(req, res) {
       return error(res, 400, result.error || 'Invalid or expired verification code.', { verified: false });
     }
 
-    const supabase = getSupabase();
     let user = null;
     let token = null;
 
-    if (supabase) {
-      try {
-        const { data: dbUser } = await supabase
-          .from('users')
-          .select('id, name, email, phone, email_verified')
-          .eq('email', email)
-          .maybeSingle();
-
+    try {
+      const { db } = await getDb();
+      if (db) {
+        const dbUser = await db.collection('users').findOne({ email });
         if (dbUser) {
+          const userId = (dbUser._id ? dbUser._id.toString() : dbUser.id) || 'usr_' + Date.now();
           user = {
-            id: dbUser.id,
+            id: userId,
             name: dbUser.name,
             email: dbUser.email,
             phone: dbUser.phone || '',
             emailVerified: true
           };
           token = createToken({
-            userId: user.id,
+            userId,
             email: user.email,
             name: user.name
           });
         }
-      } catch (e) {
-        // Continue if user record fetch fails
       }
-    }
+    } catch (e) {}
 
     return json(res, 200, {
       ok: true,
       verified: true,
-      email: email,
+      email,
       message: 'Email successfully verified.',
-      user: user || { email: email, emailVerified: true },
+      user: user || { email, emailVerified: true },
       token: token || null
     });
   } catch (err) {
@@ -74,4 +68,3 @@ module.exports = async function handler(req, res) {
     return error(res, 500, 'Server error verifying OTP: ' + err.message);
   }
 };
-

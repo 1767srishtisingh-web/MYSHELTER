@@ -1,6 +1,6 @@
 'use strict';
 
-const { getSupabase } = require('./_lib/supabase');
+const { getDb } = require('./_lib/mongodb');
 const { getUserFromReq } = require('./_lib/auth');
 const { validatePreferences } = require('./_lib/validate');
 const { json, error } = require('./_lib/respond');
@@ -11,25 +11,15 @@ module.exports = async function handler(req, res) {
     return error(res, 401, 'Authentication required.');
   }
 
-  const supabase = getSupabase();
-  if (!supabase) {
-    return error(res, 503, 'Database not connected.');
-  }
-
   if (req.method === 'GET') {
     try {
-      const { data, error: queryError } = await supabase
-        .from('preferences')
-        .select('*')
-        .eq('user_id', user.userId)
-        .maybeSingle();
+      const { db } = await getDb();
+      const prefCol = db.collection('preferences');
 
-      if (queryError) {
-        return error(res, 500, queryError.message);
-      }
-
+      const data = await prefCol.findOne({ user_id: user.userId });
       return json(res, 200, { ok: true, preferences: data || null });
     } catch (err) {
+      console.error('Preferences GET server error:', err);
       return error(res, 500, err.message);
     }
   }
@@ -41,7 +31,6 @@ module.exports = async function handler(req, res) {
     }
     body = body || {};
 
-    // Validate preferences payload
     const validation = validatePreferences(body);
     if (!validation.valid) {
       return error(res, 400, 'Invalid preferences data', { errors: validation.errors });
@@ -61,19 +50,16 @@ module.exports = async function handler(req, res) {
     };
 
     try {
-      // Upsert preferences for this user_id
-      const { data, error: upsertError } = await supabase
-        .from('preferences')
-        .upsert(prefRecord, { onConflict: 'user_id' })
-        .select()
-        .single();
+      const { db } = await getDb();
+      const prefCol = db.collection('preferences');
 
-      if (upsertError) {
-        console.error('Error saving preferences:', upsertError);
-        return error(res, 500, upsertError.message);
-      }
+      await prefCol.updateOne(
+        { user_id: user.userId },
+        { $set: prefRecord },
+        { upsert: true }
+      );
 
-      return json(res, 200, { ok: true, preferences: data });
+      return json(res, 200, { ok: true, preferences: prefRecord });
     } catch (err) {
       console.error('Preferences server error:', err);
       return error(res, 500, err.message);

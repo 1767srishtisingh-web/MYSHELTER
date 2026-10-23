@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-/*
- * Production build for a static site:
- *  1. Validates the room data.
- *  2. Checks every local href/src in the HTML pages points to a real file.
- *  3. Copies only the deployable files into dist/ (no tests, scripts or configs).
- * Exits non-zero on any problem so a broken site can't be deployed.
- */
+
+
+
+
+
+
+
 'use strict';
 
 const fs = require('fs');
@@ -17,7 +17,7 @@ const PAGES = ['index.html', 'checkout.html', 'bookings.html', '404.html', 'auth
 const DIRS = ['css', 'js', 'assets'];
 const problems = [];
 
-/* 1. Data */
+
 const { ROOMS, AMENITIES, COUPONS } = require(path.join(ROOT, 'js', 'data.js'));
 const ids = new Set();
 if (ROOMS.length < 100 || ROOMS.length > 200) problems.push(`Expected 100–200 rooms, found ${ROOMS.length}`);
@@ -35,7 +35,7 @@ for (const r of ROOMS) {
 }
 for (const c of Object.values(COUPONS)) if (typeof c.amount !== 'number') problems.push(`Coupon ${c.code} amount must be a number`);
 
-/* 2. Local references */
+
 for (const page of PAGES) {
   const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
   const refs = [...html.matchAll(/\s(?:href|src)="([^"]+)"/g)].map((m) => m[1]);
@@ -46,7 +46,7 @@ for (const page of PAGES) {
   }
 }
 
-/* 3. Syntax checks */
+
 const vm = require('vm');
 for (const dir of ['js', 'api']) {
   const scan = (d) => {
@@ -71,7 +71,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-/* 3. Copy */
+
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST);
 for (const p of PAGES) fs.copyFileSync(path.join(ROOT, p), path.join(DIST, p));

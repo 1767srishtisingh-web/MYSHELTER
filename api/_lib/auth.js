@@ -35,7 +35,7 @@ function verifyToken(token) {
   if (parts.length !== 2) return null;
   const [body, sig] = parts;
   const expectedSig = crypto.createHmac('sha256', SECRET).update(body).digest('base64url');
-  
+
   try {
     if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
       return null;

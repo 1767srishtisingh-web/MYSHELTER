@@ -1,10 +1,10 @@
-/*
- * MYSHELTER — persistence layer.
- * The selected room and bookings live in localStorage so they survive a page
- * refresh (Bug 1: stateful vs stateless). Every access is wrapped in try/catch:
- * private windows or blocked site data make storage throw, and the app must
- * keep working (and say so) instead of crashing.
- */
+
+
+
+
+
+
+
 (function (root) {
   'use strict';
 
@@ -33,20 +33,20 @@
   function get(storage, key) {
     try {
       if (storage) return storage.getItem(key);
-    } catch (e) { /* fall through */ }
+    } catch (e) {  }
     return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
   }
 
   function set(storage, key, value) {
     try {
       if (storage) { storage.setItem(key, value); return true; }
-    } catch (e) { /* quota or blocked */ }
+    } catch (e) {  }
     memory[key] = value;
     return false;
   }
 
   function remove(storage, key) {
-    try { if (storage) storage.removeItem(key); } catch (e) { /* ignore */ }
+    try { if (storage) storage.removeItem(key); } catch (e) {  }
     delete memory[key];
   }
 
@@ -97,7 +97,7 @@
       return Store.getBookings().filter(function (b) { return b.status !== 'cancelled'; }).length;
     },
 
-    // Draft form fields survive a refresh within the same tab.
+
     getDraft: function (roomId) {
       var d = readJSON(session, KEYS.draft, null);
       return d && d.roomId === roomId ? d : null;

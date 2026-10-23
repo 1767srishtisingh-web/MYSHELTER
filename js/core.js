@@ -1,10 +1,10 @@
-/*
- * MYSHELTER — core logic (pure functions, no DOM).
- */
+
+
+
 (function (root) {
   'use strict';
 
-  /* ---------- numbers & money ---------- */
+
 
   function toNumber(value) {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
@@ -24,7 +24,7 @@
     return (n < 0 ? '−' : '') + '₹' + body;
   }
 
-  // Total = (Room tariff + GST) × nights − Discount
+
   function calculateBill(input) {
     var nights = Number(input.nights) || 1;
     var perNight = input.price + input.taxes;
@@ -40,7 +40,7 @@
     };
   }
 
-  /* ---------- filtering ---------- */
+
 
   var CITIES = ['all', 'Delhi', 'Noida', 'Ghaziabad'];
   var TYPES = ['all', 'Standard', 'Deluxe', 'Executive', 'Suite'];
@@ -54,7 +54,12 @@
     var tokens = normalizeText(query).split(/[\s,]+/).filter(Boolean);
     if (!tokens.length) return true;
     var haystack = normalizeText([room.hotel, room.city, room.area, room.address, room.type].join(' '));
-    return tokens.every(function (t) { return haystack.indexOf(t) !== -1; });
+    return tokens.every(function (t) {
+      if (tokens.length > 1 && t.length > 3 && room.city && room.city.toLowerCase() === t) {
+        return room.hotel.toLowerCase().indexOf(t) !== -1;
+      }
+      return haystack.indexOf(t) !== -1;
+    });
   }
 
   function filterRooms(rooms, filters) {
@@ -67,7 +72,7 @@
       .filter(function (room) {
         return !city || room.city === city;
       })
-      // keep rooms of the selected type that are still available
+
       .filter(function (room) {
         return (!type || room.type === type) || room.available;
       })
@@ -82,7 +87,7 @@
       });
   }
 
-  /* ---------- sorting ---------- */
+
 
   var SORTS = ['recommended', 'price-asc', 'price-desc', 'stars'];
 
@@ -108,7 +113,7 @@
     return null;
   }
 
-  /* ---------- dates ---------- */
+
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -134,7 +139,7 @@
     return d.getFullYear() === p[0] && d.getMonth() === p[1] - 1 && d.getDate() === p[2];
   }
 
-  /* ---------- validation ---------- */
+
 
   function normalizePhone(raw) {
     var digits = String(raw || '').replace(/\D/g, '');
@@ -143,14 +148,30 @@
     return digits;
   }
 
+  function isValidPhone(raw) {
+    if (!raw) return false;
+    var str = String(raw).trim();
+    if (/[a-zA-Z]/.test(str)) return false;
+    var norm = normalizePhone(str);
+    return norm.length === 10 && /^[6-9]\d{9}$/.test(norm);
+  }
+
   var MAX_NIGHTS = 14;
 
   function validateBooking(input) {
     var errors = {};
-    var name = String((input && input.name) || '');
+    var rawName = String((input && input.name) || '').trim().replace(/\s+/g, ' ');
     var phone = normalizePhone(input && input.phone);
     var checkIn = String((input && input.checkIn) || '').trim();
-    var nights = Number(input && input.nights);
+    var nights = (input && input.nights !== undefined && input.nights !== null && input.nights !== '') ? Number(input.nights) : 1;
+
+    if (!rawName || rawName.length < 2 || /[<>]/.test(rawName)) {
+      errors.name = 'Please provide a valid guest name.';
+    }
+
+    if (!isValidPhone(input && input.phone)) {
+      errors.phone = 'Please provide a valid 10-digit Indian mobile number.';
+    }
 
     if (checkIn === '') errors.checkIn = 'Choose a check-in date.';
     else if (!isValidISODate(checkIn)) errors.checkIn = 'Choose a valid date.';
@@ -160,11 +181,11 @@
     return {
       valid: Object.keys(errors).length === 0,
       errors: errors,
-      values: { name: name, phone: phone, checkIn: checkIn, nights: nights }
+      values: { name: rawName, phone: phone, checkIn: checkIn, nights: nights }
     };
   }
 
-  /* ---------- filters <-> URL ---------- */
+
 
   function readFilters(search) {
     var params = new URLSearchParams(search || '');
@@ -196,7 +217,7 @@
     return s ? '?' + s : '';
   }
 
-  /* ---------- misc ---------- */
+
 
   function escapeHTML(s) {
     return String(s == null ? '' : s)

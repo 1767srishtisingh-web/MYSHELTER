@@ -1,19 +1,19 @@
 #!/usr/bin/env node
-/*
- * Zero-dependency static server for local development and end-to-end tests.
- * Sends the same security headers as production (read from vercel.json) so
- * CSP problems show up locally, not only after deploying.
- *
- *   node scripts/serve.js            → serves the project root on PORT (default 5173)
- *   node scripts/serve.js dist       → serves the production build
- */
+
+
+
+
+
+
+
+
 'use strict';
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// Load .env if present
+
 try {
   const envPath = path.resolve(__dirname, '..', '.env');
   if (fs.existsSync(envPath)) {
@@ -72,7 +72,7 @@ const server = http.createServer((req, res) => {
   }
   let pathname = decodeURIComponent(urlObj.pathname);
 
-  // Handle Serverless API routes locally
+
   if (pathname.startsWith('/api/')) {
     let apiPath = pathname.replace(/^\/api\//, '').replace(/\/$/, '');
     if (apiPath.startsWith('_') || apiPath.includes('/_')) {
@@ -107,7 +107,7 @@ const server = http.createServer((req, res) => {
       };
 
       try {
-        // Clear require cache in dev so code changes reflect immediately
+
         delete require.cache[require.resolve(targetFile)];
         const handler = require(targetFile);
         await handler(req, res);
@@ -121,7 +121,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle rewrites
+
   if (pathname === '/admin') pathname = '/admin.html';
   if (pathname === '/auth') pathname = '/auth.html';
 
@@ -131,7 +131,7 @@ const server = http.createServer((req, res) => {
 
   if (pathname.endsWith('/')) pathname += 'index.html';
   const file = path.resolve(ROOT, '.' + pathname);
-  // Block path traversal and dotfiles
+
   if (!file.startsWith(ROOT + path.sep) || /(^|[\\/])\./.test(path.relative(ROOT, file))) {
     return send(res, 403, 'Forbidden', TYPES['.txt']);
   }

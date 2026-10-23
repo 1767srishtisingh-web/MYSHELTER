@@ -1,7 +1,7 @@
-/*
- * MYSHELTER — Client-Side Authentication & Session Manager
- * Handles user sessions, login/register API calls, and syncs the navigation bar.
- */
+
+
+
+
 (function (root) {
   'use strict';
 
@@ -76,7 +76,7 @@
       try {
         storage.removeItem(TOKEN_KEY);
         storage.removeItem(USER_KEY);
-      } catch (e) { /* ignore */ }
+      } catch (e) {  }
       root.location.replace('auth.html');
     },
 
@@ -117,9 +117,9 @@
           return json;
         }
       } catch (e) {
-        // Network offline or static dev server without /api
+
       }
-      // Offline / Live Server fallback
+
       var mockUser = {
         id: 'usr_' + Date.now().toString(36),
         name: data.name || (data.email ? data.email.split('@')[0] : 'User'),
@@ -153,9 +153,9 @@
           return json;
         }
       } catch (e) {
-        // Network offline or static dev server without /api
+
       }
-      // Offline / Live Server fallback
+
       if (!email || !password) {
         return { ok: false, error: 'Please enter both email and password.' };
       }
@@ -195,7 +195,7 @@
           return await res.json();
         }
       } catch (e) {
-        // Fallback
+
       }
       return { ok: true, message: 'OTP sent successfully (offline mode).', email: email, code: '842619' };
     },
@@ -219,7 +219,7 @@
           return json;
         }
       } catch (e) {
-        // Fallback
+
       }
       if (code === '842619') {
         var u = Auth.getUser() || { email: email };
@@ -247,12 +247,12 @@
           } else if (res.status === 401) {
             Auth.logout();
           } else if (res.status === 403 && json.code === 'EMAIL_NOT_VERIFIED') {
-            // Option B: If email verification enforced and user revoked, log out
+
             Auth.logout();
           }
         }
       } catch (e) {
-        // Network offline or local dev without serverless functions
+
       }
       Auth.updateNav();
       return Auth.getUser();

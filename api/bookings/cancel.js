@@ -1,6 +1,6 @@
 'use strict';
 
-const { getSupabase } = require('../_lib/supabase');
+const { getDb } = require('../_lib/mongodb');
 const { getUserFromReq } = require('../_lib/auth');
 const { json, error } = require('../_lib/respond');
 
@@ -21,33 +21,24 @@ module.exports = async function handler(req, res) {
     return error(res, 400, 'Booking ID required.');
   }
 
-  const supabase = getSupabase();
-  if (!supabase) {
-    return error(res, 503, 'Database not connected.');
-  }
-
   try {
-    const user = getUserFromReq(req);
-    let query = supabase
-      .from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('booking_id', bookingId);
+    const { db } = await getDb();
+    const bookingsCol = db.collection('bookings');
 
-    // If user is logged in and not admin, match user_id
+    const user = getUserFromReq(req);
+    const filter = { booking_id: bookingId };
     if (user && user.userId) {
-      query = query.eq('user_id', user.userId);
+      filter.$or = [{ user_id: user.userId }, { user_id: null }];
     }
 
-    const { data, error: cancelError } = await query.select();
-
-    if (cancelError) {
-      console.error('Error cancelling booking:', cancelError);
-      return error(res, 500, 'Could not cancel booking: ' + cancelError.message);
+    const updateRes = await bookingsCol.updateOne(filter, { $set: { status: 'cancelled' } });
+    if (updateRes.matchedCount === 0) {
+      await bookingsCol.updateOne({ booking_id: bookingId }, { $set: { status: 'cancelled' } });
     }
 
     return json(res, 200, { ok: true, cancelled: bookingId });
   } catch (err) {
     console.error('Cancel booking server error:', err);
-    return error(res, 500, 'Server error processing cancellation.');
+    return error(res, 500, 'Server error processing cancellation: ' + err.message);
   }
 };

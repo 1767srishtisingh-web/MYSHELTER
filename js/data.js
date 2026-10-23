@@ -1,9 +1,9 @@
-/*
- * MYSHELTER — hotel rooms in Delhi, Noida and Ghaziabad.
- * All data is local (no backend). Tariffs are indicative per night.
- * Photos are representative Unsplash images; if one fails to load the UI
- * shows assets/placeholder.svg instead.
- */
+
+
+
+
+
+
 (function (root) {
   'use strict';
 
@@ -24,9 +24,9 @@
     ]
   };
 
-  // name, stars, city, area, address, hotel amenities, base tariff for the entry room type
+
   var HOTELS = [
-    // ---------- Delhi ----------
+
     ['The Imperial New Delhi', 5, 'Delhi', 'Connaught Place', '1, Janpath, Connaught Place, New Delhi 110001', ['pool', 'parking'], 16500],
     ['Taj Palace, New Delhi', 5, 'Delhi', 'Chanakyapuri', '2, Sardar Patel Marg, Diplomatic Enclave, Chanakyapuri, New Delhi 110021', ['pool', 'parking'], 15000],
     ['The Leela Palace New Delhi', 5, 'Delhi', 'Chanakyapuri', 'Diplomatic Enclave, Chanakyapuri, New Delhi 110023', ['pool', 'parking'], 19500],
@@ -49,7 +49,7 @@
     ['Holiday Inn New Delhi Mayur Vihar Noida', 4, 'Delhi', 'Mayur Vihar', '13A, Mayur Place, District Centre, Mayur Vihar, New Delhi 110091', ['pool', 'parking'], 6900],
     ['Bloomrooms @ Janpath', 3, 'Delhi', 'Janpath', '9, Janpath Lane, Connaught Place, New Delhi 110001', [], 4200],
 
-    // ---------- Noida ----------
+
     ['Radisson Blu MBD Hotel Noida', 5, 'Noida', 'Sector 18', 'L-2, Sector 18, beside Centrestage Mall, Noida 201301', ['pool', 'parking'], 8800],
     ['Radisson Noida', 4, 'Noida', 'Sector 55', 'C Block, Sector 55, Noida 201307', ['parking'], 5600],
     ['Fortune Inn Grazia', 4, 'Noida', 'Sector 27', 'Plot 1A, Block I, Sector 27, Noida 201301', ['parking'], 5200],
@@ -65,7 +65,7 @@
     ['Jaypee Greens Golf & Spa Resort', 5, 'Noida', 'Greater Noida', 'G Block, Surajpur–Kasna Road, Jaypee Greens, Greater Noida 201308', ['pool', 'parking'], 9500],
     ['Radisson Blu Greater Noida', 5, 'Noida', 'Greater Noida', 'C-8, Site IV, Kasna, Greater Noida 201306', ['pool', 'parking'], 7600],
 
-    // ---------- Ghaziabad ----------
+
     ['Radisson Blu Kaushambi Delhi NCR', 5, 'Ghaziabad', 'Kaushambi', 'Plot 3, Kaushambi, Ghaziabad 201010', ['pool', 'parking'], 8300],
     ['Radisson Blu Towers Kaushambi Delhi NCR', 5, 'Ghaziabad', 'Kaushambi', 'Kaushambi, Ghaziabad 201010', ['pool', 'parking'], 8700],
     ['Lemon Tree Hotel, East Delhi Mall', 4, 'Ghaziabad', 'Kaushambi', 'East Delhi Mall, Kaushambi, Ghaziabad 201010', ['parking'], 5400],
@@ -80,7 +80,7 @@
     ['Hotel Black Stone', 3, 'Ghaziabad', 'Vasundhara', 'Vasundhara, Ghaziabad 201012', [], 2600]
   ];
 
-  // Room types offered by each hotel class. factor = tariff multiplier on the hotel base.
+
   var LADDER = {
     5: [
       { type: 'Deluxe', bed: 'King bed', guests: 2, size: 36, factor: 1, breakfast: false, freeCancellation: true },
@@ -105,7 +105,7 @@
 
   function roundTo(n, step) { return Math.round(n / step) * step; }
 
-  // GST on hotel rooms: 5% up to ₹7,500 per night, 18% above.
+
   function gstFor(price) { return Math.round(price * (price <= 7500 ? 0.05 : 0.18)); }
 
   var ROOMS = [];
@@ -144,12 +144,12 @@
 
   var CITIES = ['Delhi', 'Noida', 'Ghaziabad'];
 
-  // Default order: one room per hotel at a time, alternating cities, so the
-  // first screen shows a mix of hotels and locations.
+
+
   (function interleave() {
     var queues = CITIES.map(function (c) {
       return ROOMS.filter(function (r) { return r.city === c; })
-        .map(function (r, i) { return { r: r, tier: i % 3 }; }) // each hotel has 3 rooms in a row
+        .map(function (r, i) { return { r: r, tier: i % 3 }; })
         .sort(function (a, b) { return a.tier - b.tier; })
         .map(function (x) { return x.r; });
     });

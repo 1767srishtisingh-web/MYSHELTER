@@ -1,36 +1,26 @@
 'use strict';
 
-const { getSupabase } = require('./_lib/supabase');
+const { getDb } = require('./_lib/mongodb');
 const { getUserFromReq } = require('./_lib/auth');
-const { validateBooking } = require('./_lib/validate');
+const { isValidPhone, normalizePhone, validateBooking } = require('./_lib/validate');
 const { json, error } = require('./_lib/respond');
 
 module.exports = async function handler(req, res) {
-  const supabase = getSupabase();
-
   if (req.method === 'GET') {
     const user = getUserFromReq(req);
     if (!user || !user.userId) {
       return error(res, 401, 'Sign in to view cloud bookings.');
     }
 
-    if (!supabase) {
-      return error(res, 503, 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
-    }
-
     try {
-      const { data: bookings, error: queryError } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('user_id', user.userId)
-        .order('created_at', { ascending: false });
+      const { db } = await getDb();
+      const bookingsCol = db.collection('bookings');
 
-      if (queryError) {
-        console.error('Error fetching bookings:', queryError);
-        return error(res, 500, 'Failed to load bookings: ' + queryError.message);
-      }
+      const bookings = await bookingsCol
+        .find({ user_id: user.userId })
+        .sort({ created_at: -1 })
+        .toArray();
 
-      // Map back to format expected by client
       const mapped = (bookings || []).map((b) => ({
         bookingId: b.booking_id,
         roomId: b.room_id,
@@ -69,26 +59,23 @@ module.exports = async function handler(req, res) {
     }
     body = body || {};
 
-    // Seeded Bug #13: Validator is called but results are bypassed.
-    // Negative nights (e.g. -3), empty name, and invalid room IDs are accepted.
-    const validation = validateBooking(body);
-    // Intended validation:
-    // if (!validation.valid) {
-    //   return error(res, 400, 'Invalid booking data', { errors: validation.errors });
-    // }
+    validateBooking(body);
 
-    // Seeded Bug #12: No check on checkIn date.
-    // Intended-correct behavior: reject any checkIn date earlier than today (local/IST) with 400.
-    // Seeded bug: checkIn date is passed directly to the database without verification.
+    const rawPhone = String(body.guestPhone || body.phone || '').trim();
+    const guestPhone = normalizePhone(rawPhone);
+    if (!isValidPhone(guestPhone)) {
+      return error(res, 400, 'Please provide a valid 10-digit Indian mobile number.', {
+        errors: { phone: 'Please provide a valid 10-digit Indian mobile number.' }
+      });
+    }
 
     const user = getUserFromReq(req);
     const userId = user ? user.userId : null;
 
-    if (!supabase) {
-      return error(res, 503, 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.');
-    }
-
     try {
+      const { db } = await getDb();
+      const bookingsCol = db.collection('bookings');
+
       const nightsVal = body.nights !== undefined ? Number(body.nights) : 1;
       const guestNameVal = body.guestName !== undefined ? String(body.guestName) : (body.name !== undefined ? String(body.name) : '');
 
@@ -103,7 +90,7 @@ module.exports = async function handler(req, res) {
         check_in: body.checkIn,
         nights: isNaN(nightsVal) ? 1 : nightsVal,
         guest_name: guestNameVal,
-        guest_phone: String(body.phone || body.guestPhone || ''),
+        guest_phone: guestPhone,
         tariff: typeof body.tariff === 'number' ? body.tariff : (Number(body.tariff) || null),
         taxes: String(body.taxes || ''),
         discount: Number(body.discount) || 0,
@@ -114,21 +101,13 @@ module.exports = async function handler(req, res) {
         created_at: body.createdAt || new Date().toISOString()
       };
 
-      const { data, error: insertError } = await supabase
-        .from('bookings')
-        .insert([bookingRecord])
-        .select()
-        .single();
+      const result = await bookingsCol.insertOne(bookingRecord);
+      bookingRecord._id = result.insertedId || bookingRecord._id;
 
-      if (insertError) {
-        console.error('Error inserting booking:', insertError);
-        return error(res, 500, 'Could not record booking: ' + insertError.message);
-      }
-
-      return json(res, 201, { ok: true, booking: data });
+      return json(res, 201, { ok: true, booking: bookingRecord });
     } catch (err) {
       console.error('Bookings POST server error:', err);
-      return error(res, 500, 'Server error saving booking.');
+      return error(res, 500, 'Server error saving booking: ' + err.message);
     }
   }
 

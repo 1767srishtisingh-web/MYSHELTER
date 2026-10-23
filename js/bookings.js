@@ -1,6 +1,6 @@
-/*
- * MYSHELTER — My Bookings page: list and cancel bookings stored in localStorage.
- */
+
+
+
 (function () {
   'use strict';
 
@@ -25,7 +25,7 @@
         '<p class="details">' + esc(b.locality) + ', ' + esc(b.city) + (b.name ? ' · ' + esc(b.name) : '') + (b.phone ? ' · +91 ' + esc(b.phone) : '') + '</p>' +
         '<div class="meta-row">' +
           '<span class="meta meta--type">' + I.bed + esc(b.type) + '</span>' +
-          '<span class="meta">' + I.calendar + esc(Core.formatDate(b.checkIn)) + (b.nights ? ' · ' + Number(b.nights) + (Number(b.nights) === 1 ? ' night' : ' nights') : '') + '</span>' +
+          '<span class="meta">' + I.calendar + esc(Core.formatDate(b.checkIn)) + (b.nights ? ' · 1 night' : '') + '</span>' +
           '<span class="meta">' + I.tag + esc(b.bookingId) + '</span>' +
           (b.coupon ? '<span class="meta">' + esc(b.coupon) + '</span>' : '') +
         '</div>' +
@@ -70,7 +70,7 @@
       if (res.ok) {
         var data = await res.json();
         if (data.ok && Array.isArray(data.bookings)) {
-          // Merge database bookings with any un-synced local bookings
+
           var localList = Store.getBookings();
           var dbIds = new Set(data.bookings.map(function (b) { return b.bookingId; }));
           var merged = data.bookings.slice();
@@ -108,7 +108,7 @@
     var idToCancel = pendingCancel;
     Store.updateBooking(idToCancel, { status: 'cancelled', cancelledAt: new Date().toISOString() });
 
-    // Sync cancellation to Supabase database
+
     if (window.MyShelterAuth) {
       window.MyShelterAuth.authFetch('/api/bookings/cancel', {
         method: 'POST',

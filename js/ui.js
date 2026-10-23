@@ -1,7 +1,7 @@
-/*
- * MYSHELTER — shared UI helpers: icons, toasts, cursor glow, header badge,
- * image fallback. Loaded on every page after store.js.
- */
+
+
+
+
 (function (root) {
   'use strict';
 
@@ -45,7 +45,7 @@
 
   var PLACEHOLDER = 'assets/placeholder.svg';
 
-  // Swap a failed photo for the local placeholder exactly once.
+
   function bindImageFallback(img) {
     img.addEventListener('error', function onErr() {
       img.removeEventListener('error', onErr);
@@ -54,7 +54,7 @@
     });
   }
 
-  /* ---------- Toasts ---------- */
+
   var toastHost;
   function toast(message, kind) {
     if (!toastHost) {
@@ -77,7 +77,7 @@
     }, 3200);
   }
 
-  /* ---------- Cursor glow on glass surfaces ---------- */
+
   var finePointer = root.matchMedia && root.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var reduceMotion = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -92,7 +92,7 @@
     }, { passive: true });
   }
 
-  /* ---------- Header ---------- */
+
   function refreshBookingBadge() {
     var n = root.MyShelterStore ? root.MyShelterStore.activeBookingCount() : 0;
     document.querySelectorAll('[data-booking-count]').forEach(function (b) {
@@ -118,7 +118,7 @@
     if (y) y.textContent = String(new Date().getFullYear());
   });
 
-  // Keep the badge in sync across tabs.
+
   root.addEventListener('storage', function (e) {
     if (!e.key || e.key.indexOf('myshelter:') === 0) refreshBookingBadge();
   });

@@ -1,6 +1,6 @@
 'use strict';
 
-const { getSupabase } = require('../_lib/supabase');
+const { getDb, ObjectId } = require('../_lib/mongodb');
 const { getUserFromReq } = require('../_lib/auth');
 const { json, error } = require('../_lib/respond');
 
@@ -15,32 +15,30 @@ module.exports = async function handler(req, res) {
     return error(res, 401, 'Not authenticated or session expired.');
   }
 
-  const supabase = getSupabase();
-  if (!supabase) {
-    // If db temporarily unreachable, return decoded token user info
-    return json(res, 200, {
-      ok: true,
-      user: {
-        id: tokenUser.userId,
-        name: tokenUser.name,
-        email: tokenUser.email,
-        emailVerified: false
-      }
-    });
-  }
-
   try {
-    const { data: user, error: queryError } = await supabase
-      .from('users')
-      .select('id, name, email, phone, email_verified, created_at')
-      .eq('id', tokenUser.userId)
-      .maybeSingle();
+    const { db } = await getDb();
+    const usersCol = db.collection('users');
+
+    let user = null;
+    try {
+      user = await usersCol.findOne({ _id: new ObjectId(tokenUser.userId) });
+    } catch (e) {
+      user = null;
+    }
+
+    if (!user) {
+      user = await usersCol.findOne({
+        $or: [
+          { _id: tokenUser.userId },
+          { id: tokenUser.userId },
+          { email: tokenUser.email }
+        ]
+      });
+    }
 
     const REQUIRE_EMAIL_VERIFICATION = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
 
-    // If user record is not found in database (e.g. seeded bug #11 fallback or memory store restart),
-    // retain session from decoded JWT payload rather than throwing 401 and destroying the session.
-    if (queryError || !user) {
+    if (!user) {
       if (REQUIRE_EMAIL_VERIFICATION) {
         return error(res, 403, 'Email not verified.', { code: 'EMAIL_NOT_VERIFIED' });
       }
@@ -61,10 +59,12 @@ module.exports = async function handler(req, res) {
       return error(res, 403, 'Email not verified.', { code: 'EMAIL_NOT_VERIFIED' });
     }
 
+    const userId = (user._id ? user._id.toString() : user.id) || tokenUser.userId;
+
     return json(res, 200, {
       ok: true,
       user: {
-        id: user.id,
+        id: userId,
         name: user.name,
         email: user.email,
         phone: user.phone || '',

@@ -38,13 +38,13 @@
 
   <main id="main">
     <div class="auth-wrap wrap">
-      <!-- Brand Header -->
+
       <div class="auth-hero text-center">
         <h1 class="auth-brand-name">MYSHELTER</h1>
         <p class="auth-tagline">Curated hotel rooms across Delhi, Noida, and Ghaziabad.</p>
       </div>
 
-      <!-- Signed-in State Card -->
+
       <div class="auth-card panel" id="signed-in-card" hidden>
         <div class="auth-card-head">
           <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
@@ -52,7 +52,7 @@
           <p id="signed-in-details"></p>
         </div>
 
-        <!-- Email Verification Panel for Signed-In User -->
+
         <div id="signed-in-verify-container" style="margin: 1.25rem 0; padding: 1rem; background: var(--surface-alt, #faf7f4); border-radius: 8px; border: 1px solid var(--border, #e5ded6); text-align: left;" hidden>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <span style="font-size: 0.875rem; font-weight: 600;">Email Verification</span>
@@ -78,14 +78,14 @@
         </div>
       </div>
 
-      <!-- Auth Form Card -->
+
       <div class="auth-card panel" id="auth-form-card">
         <div class="auth-tabs" role="tablist" aria-label="Account options">
           <button type="button" class="auth-tab is-active" id="tab-login" role="tab" aria-selected="true" aria-controls="login-panel">Sign In</button>
           <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="register-panel">Create Account</button>
         </div>
 
-        <!-- 1. SIGN IN FORM -->
+
         <div class="auth-panel" id="login-panel" role="tabpanel" aria-labelledby="tab-login">
           <div class="auth-card-head">
             <h2>Welcome Back</h2>
@@ -119,7 +119,7 @@
           </form>
         </div>
 
-        <!-- 2. REGISTER FORM -->
+
         <div class="auth-panel" id="register-panel" role="tabpanel" aria-labelledby="tab-register" hidden>
           <div class="auth-card-head">
             <h2>Create Your Account</h2>
@@ -173,7 +173,7 @@
       </div>
     </div>
 
-    <!-- Registration Success & OTP Verification Modal -->
+
     <dialog class="clean-modal" id="reg-success-dialog" aria-labelledby="reg-success-title">
       <div class="modal-content-card">
         <div class="modal-check-icon">
@@ -184,14 +184,14 @@
         </div>
         <h2 id="reg-success-title" class="modal-title">Registration Successful</h2>
         <p class="modal-description" id="reg-modal-desc">Your account has been created. Please enter the 6-digit verification code sent to your email.</p>
-        
+
         <div class="modal-details-card">
           <div class="modal-detail-row"><span>Name</span><strong id="reg-modal-name">—</strong></div>
           <div class="modal-detail-row"><span>Email</span><strong id="reg-modal-email">—</strong></div>
           <div class="modal-detail-row"><span>Mobile</span><strong id="reg-modal-phone">—</strong></div>
         </div>
 
-        <!-- Email OTP Verification Step -->
+
         <div class="otp-verification-section" id="otp-verify-section" style="margin-top: 1rem; padding: 1rem; background: var(--surface-alt, #faf7f4); border-radius: 8px; border: 1px solid var(--border, #e5ded6); text-align: left;">
           <label class="label" for="otp-code-input" style="font-size: 0.875rem; font-weight: 600; display: block; margin-bottom: 0.25rem;">Enter 6-Digit Email Code</label>
           <p style="font-size: 0.8rem; color: var(--faint, #6f6860); margin: 0 0 0.5rem;">We generated a verification code for your email address.</p>

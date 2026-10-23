@@ -2,14 +2,14 @@
 
 const nodemailer = require('nodemailer');
 
-/**
- * Creates and returns a Nodemailer transporter based on available environment variables.
- * Supports:
- * 1. Gmail with App Password: GMAIL_USER and GMAIL_APP_PASSWORD
- * 2. Generic SMTP: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
- *
- * @returns {import('nodemailer').Transporter | null}
- */
+
+
+
+
+
+
+
+
 function getTransporter() {
   const gmailUser = (process.env.GMAIL_USER || '').trim();
   const gmailPass = (process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS || '').replace(/\s+/g, '').trim();
@@ -44,17 +44,17 @@ function getTransporter() {
   return null;
 }
 
-/**
- * Sends an OTP email to the specified recipient.
- * If SMTP credentials are not configured, logs a helpful simulation message and returns gracefully.
- *
- * @param {Object} options
- * @param {string} options.to Recipient email address
- * @param {string} options.code 6-digit verification code
- * @param {string} [options.purpose='verification'] Purpose of the code (e.g., 'login', 'registration')
- * @param {number} [options.expiresMinutes=10] Expiry duration in minutes
- * @returns {Promise<{ sent: boolean, error?: string, simulated?: boolean }>}
- */
+
+
+
+
+
+
+
+
+
+
+
 async function sendOtpEmail({ to, code, purpose = 'verification', expiresMinutes = 10 }) {
   const transporter = getTransporter();
 
@@ -156,7 +156,7 @@ async function sendOtpEmail({ to, code, purpose = 'verification', expiresMinutes
     return { sent: true, messageId: info.messageId };
   } catch (err) {
     console.error(`[MYSHELTER Email Error] Failed to send email to ${to}:`, err.message);
-    // Return gracefully so application / test flow is not interrupted
+
     return { sent: false, error: err.message, simulated: true };
   }
 }

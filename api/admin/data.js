@@ -1,6 +1,6 @@
 'use strict';
 
-const { getSupabase } = require('../_lib/supabase');
+const { getDb } = require('../_lib/mongodb');
 const { verifyToken } = require('../_lib/auth');
 const { json, error } = require('../_lib/respond');
 
@@ -10,62 +10,55 @@ module.exports = async function handler(req, res) {
     return error(res, 405, 'Method not allowed');
   }
 
-  // Verify admin authorization
   const authHeader = (req.headers && (req.headers['authorization'] || req.headers['Authorization'])) || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ((req.headers && req.headers['x-auth-token']) || null);
-  
+
   const tokenData = verifyToken(token);
   if (!tokenData || !tokenData.isAdmin) {
     return error(res, 401, 'Unauthorized. Admin credentials required.');
   }
 
-  const supabase = getSupabase();
-  if (!supabase) {
-    return error(res, 503, 'Database not connected. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment variables.');
-  }
-
   try {
-    // 1. Fetch all users (excluding password hashes and salts)
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('id, name, email, phone, email_verified, created_at')
-      .order('created_at', { ascending: false });
+    const { db } = await getDb();
+    const usersCol = db.collection('users');
+    const bookingsCol = db.collection('bookings');
+    const prefCol = db.collection('preferences');
 
-    if (usersError) {
-      console.error('Error querying users:', usersError);
-      return error(res, 500, 'Failed to query users: ' + usersError.message);
-    }
+    const rawUsers = await usersCol.find({}).sort({ created_at: -1 }).toArray();
+    const users = (rawUsers || []).map((u) => ({
+      id: (u._id ? u._id.toString() : u.id) || '',
+      name: u.name || '',
+      email: u.email || '',
+      phone: u.phone || '',
+      email_verified: Boolean(u.email_verified),
+      created_at: u.created_at
+    }));
 
-    // 2. Fetch all bookings
-    const { data: bookings, error: bookingsError } = await supabase
-      .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const rawBookings = await bookingsCol.find({}).sort({ created_at: -1 }).toArray();
+    const bookings = (rawBookings || []).map((b) => ({
+      ...b,
+      id: (b._id ? b._id.toString() : b.id) || b.booking_id
+    }));
 
-    if (bookingsError) {
-      console.error('Error querying bookings:', bookingsError);
-      return error(res, 500, 'Failed to query bookings: ' + bookingsError.message);
-    }
-
-    // 3. Fetch all preferences with user details
-    const { data: preferences, error: prefError } = await supabase
-      .from('preferences')
-      .select('*, users(name, email, phone)')
-      .order('updated_at', { ascending: false });
-
-    if (prefError) {
-      console.error('Error querying preferences:', prefError);
-      return error(res, 500, 'Failed to query preferences: ' + prefError.message);
-    }
+    const rawPrefs = await prefCol.find({}).sort({ updated_at: -1 }).toArray();
+    const userMap = new Map(users.map((u) => [u.id, u]));
+    const preferences = (rawPrefs || []).map((p) => {
+      const u = userMap.get(p.user_id) || null;
+      return {
+        ...p,
+        id: (p._id ? p._id.toString() : p.id) || p.user_id,
+        users: u ? { name: u.name, email: u.email, phone: u.phone } : null
+      };
+    });
 
     return json(res, 200, {
       ok: true,
-      users: users || [],
-      bookings: bookings || [],
-      preferences: preferences || []
+      users,
+      bookings,
+      preferences
     });
   } catch (err) {
     console.error('Admin data server error:', err);
-    return error(res, 500, 'Server error retrieving admin data.');
+    return error(res, 500, 'Server error retrieving admin data: ' + err.message);
   }
 };

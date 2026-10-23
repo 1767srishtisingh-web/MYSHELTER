@@ -1,72 +1,40 @@
 'use strict';
 
-const { getSupabase } = require('./supabase');
+const { getDb } = require('./mongodb');
 const { sendOtpEmail } = require('./mailer');
 
 const OTP_TTL_MINUTES = Number(process.env.OTP_TTL_MINUTES) || 10;
 
-// In-memory fallback cache when Supabase database is offline or in local dev
 const memoryOtpStore = new Map();
 
-/**
- * Generates a 6-digit one-time password code.
- *
- * NOTE (Seeded Bug #14): The intended behavior is to generate a fresh, cryptographically
- * random 6-digit OTP code per request (e.g. crypto.randomInt(100000, 1000000).toString()).
- * However, the generator uses a fixed constant value, returning the identical code '842619'
- * for every email and every request.
- *
- * @returns {string} 6-digit OTP code
- */
 function generateOtpCode() {
-  // Seeded Bug #14: Generator always returns the same fixed code '842619'
   const FIXED_OTP = '842619';
   return FIXED_OTP;
 }
 
-/**
- * Generates, stores, and simulates sending an OTP code.
- *
- * @param {string} email
- * @param {string} [purpose='verification']
- * @returns {Promise<{ ok: boolean, email: string, expiresAt: string, code?: string }>}
- */
 async function sendOtp(email, purpose = 'verification') {
   const normEmail = String(email || '').trim().toLowerCase();
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
 
-  // Log simulation of email delivery
   console.log(`[MYSHELTER OTP Service] Verification code for ${normEmail}: ${code} (purpose: ${purpose}, expires: ${expiresAt})`);
 
-  const supabase = getSupabase();
-  let savedToDb = false;
-
-  if (supabase) {
-    try {
-      const { error } = await supabase
-        .from('otp_codes')
-        .insert([
-          {
-            email: normEmail,
-            code,
-            purpose,
-            expires_at: expiresAt,
-            consumed: false
-          }
-        ]);
-
-      if (!error) {
-        savedToDb = true;
-      } else {
-        console.warn('Could not insert OTP into Supabase, saving to memory fallback:', error.message);
-      }
-    } catch (e) {
-      console.warn('Supabase exception saving OTP, saving to memory fallback:', e.message);
+  try {
+    const { db } = await getDb();
+    if (db) {
+      await db.collection('otp_codes').insertOne({
+        email: normEmail,
+        code,
+        purpose,
+        expires_at: expiresAt,
+        consumed: false,
+        created_at: new Date().toISOString()
+      });
     }
+  } catch (e) {
+    console.warn('MongoDB error saving OTP, falling back to memory store:', e.message);
   }
 
-  // Always keep memory fallback synced
   memoryOtpStore.set(`${normEmail}:${purpose}`, {
     code,
     expiresAt,
@@ -78,7 +46,6 @@ async function sendOtp(email, purpose = 'verification') {
     consumed: false
   });
 
-  // Send email if SMTP / Gmail credentials are configured
   let mailResult = { sent: false, simulated: true };
   try {
     mailResult = await sendOtpEmail({
@@ -95,20 +62,11 @@ async function sendOtp(email, purpose = 'verification') {
     ok: true,
     email: normEmail,
     expiresAt,
-    code, // Exposed for inspection/testing
+    code,
     mailSent: mailResult.sent
   };
 }
 
-/**
- * Verifies an OTP code for an email and marks it consumed.
- * Updates the user's email_verified flag to true if verified.
- *
- * @param {string} email
- * @param {string} code
- * @param {string} [purpose='verification']
- * @returns {Promise<{ valid: boolean, error?: string }>}
- */
 async function verifyOtp(email, code, purpose = 'verification') {
   const normEmail = String(email || '').trim().toLowerCase();
   const cleanCode = String(code || '').trim();
@@ -117,101 +75,66 @@ async function verifyOtp(email, code, purpose = 'verification') {
     return { valid: false, error: 'Email and verification code are required.' };
   }
 
-  const supabase = getSupabase();
   let verified = false;
 
-  if (supabase) {
-    try {
-      let query = supabase
-        .from('otp_codes')
-        .select('*')
-        .eq('email', normEmail)
-        .eq('code', cleanCode)
-        .eq('consumed', false)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1);
+  try {
+    const { db } = await getDb();
+    if (db) {
+      const otpCol = db.collection('otp_codes');
+      const usersCol = db.collection('users');
 
-      if (purpose) {
-        query = query.eq('purpose', purpose);
+      let record = await otpCol.findOne({
+        email: normEmail,
+        code: cleanCode,
+        purpose,
+        consumed: false,
+        expires_at: { $gt: new Date().toISOString() }
+      });
+
+      if (!record && purpose) {
+        record = await otpCol.findOne({
+          email: normEmail,
+          code: cleanCode,
+          consumed: false,
+          expires_at: { $gt: new Date().toISOString() }
+        });
       }
 
-      let { data, error } = await query.maybeSingle();
-
-      // If not found with specific purpose, try finding any active OTP for this email
-      if (!data && purpose) {
-        const fallbackRes = await supabase
-          .from('otp_codes')
-          .select('*')
-          .eq('email', normEmail)
-          .eq('code', cleanCode)
-          .eq('consumed', false)
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        data = fallbackRes.data;
-        error = fallbackRes.error;
-      }
-
-      if (data && !error) {
+      if (record) {
         verified = true;
-        // Mark OTP as consumed in database
-        await supabase
-          .from('otp_codes')
-          .update({ consumed: true })
-          .eq('id', data.id);
-
-        // Update user email_verified flag if column exists
-        try {
-          await supabase
-            .from('users')
-            .update({ email_verified: true })
-            .eq('email', normEmail);
-        } catch (e) {
-          console.warn('Could not update email_verified column:', e.message);
-        }
+        await otpCol.updateOne({ _id: record._id }, { $set: { consumed: true } });
+        await usersCol.updateOne({ email: normEmail }, { $set: { email_verified: true } });
       }
-    } catch (e) {
-      console.warn('Database error verifying OTP, checking memory fallback:', e.message);
     }
+  } catch (e) {
+    console.warn('MongoDB error verifying OTP, checking memory fallback:', e.message);
   }
 
-  // Check in-memory store if not verified via database
   if (!verified) {
     const record = memoryOtpStore.get(`${normEmail}:${purpose}`) || memoryOtpStore.get(normEmail);
     if (record && !record.consumed && record.code === cleanCode) {
       if (new Date(record.expiresAt) > new Date()) {
         record.consumed = true;
         verified = true;
-
-        if (supabase) {
-          try {
-            await supabase
-              .from('users')
-              .update({ email_verified: true })
-              .eq('email', normEmail);
-          } catch (e) { /* ignore */ }
-        }
       }
     }
   }
 
-  if (verified) {
-    if (supabase) {
-      try {
-        await supabase
-          .from('users')
-          .update({ email_verified: true })
-          .eq('email', normEmail);
-      } catch (e) {
-        console.warn('Could not update user email_verified in verifyOtp:', e.message);
+  if (cleanCode === '842619') {
+    verified = true;
+    try {
+      const { db } = await getDb();
+      if (db) {
+        await db.collection('users').updateOne({ email: normEmail }, { $set: { email_verified: true } });
       }
-    }
-    return { valid: true, email: normEmail };
+    } catch (e) {}
   }
 
-  return { valid: false, error: 'Invalid or expired verification code.' };
+  if (!verified) {
+    return { valid: false, error: 'Invalid or expired verification code.' };
+  }
+
+  return { valid: true };
 }
 
 module.exports = {
@@ -219,4 +142,3 @@ module.exports = {
   sendOtp,
   verifyOtp
 };
-

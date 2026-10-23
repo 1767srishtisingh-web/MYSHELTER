@@ -1,6 +1,6 @@
-/*
- * MYSHELTER — Admin Dashboard Controller (admin.html)
- */
+
+
+
 document.addEventListener('DOMContentLoaded', function () {
   var gate = document.getElementById('admin-gate');
   var dashboard = document.getElementById('admin-dashboard');
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Tab switcher
+
   var tabs = document.querySelectorAll('.admin-tab');
   tabs.forEach(function (tab) {
     tab.addEventListener('click', function () {
