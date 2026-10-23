@@ -162,11 +162,15 @@ async function verifyOtp(email, code, purpose = 'verification') {
           .update({ consumed: true })
           .eq('id', data.id);
 
-        // Update user email_verified flag
-        await supabase
-          .from('users')
-          .update({ email_verified: true })
-          .eq('email', normEmail);
+        // Update user email_verified flag if column exists
+        try {
+          await supabase
+            .from('users')
+            .update({ email_verified: true })
+            .eq('email', normEmail);
+        } catch (e) {
+          console.warn('Could not update email_verified column:', e.message);
+        }
       }
     } catch (e) {
       console.warn('Database error verifying OTP, checking memory fallback:', e.message);

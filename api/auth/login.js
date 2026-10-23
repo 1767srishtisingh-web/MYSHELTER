@@ -30,9 +30,9 @@ module.exports = async function handler(req, res) {
   try {
     let user = null;
     if (supabase) {
-      const { data: dbUser, error: findError } = await supabase
+      let { data: dbUser, error: findError } = await supabase
         .from('users')
-        .select('id, name, email, phone, password_hash, salt, email_verified')
+        .select('id, name, email, phone, password_hash, salt')
         .eq('email', email)
         .maybeSingle();
 

@@ -59,21 +59,33 @@ module.exports = async function handler(req, res) {
     // Hash password with salt
     const { salt, hash } = hashPassword(password);
 
-    // Insert user into database
-    const { data: newUser, error: insertError } = await supabase
+    // Insert user into database (resilient to schema with or without email_verified column)
+    const userPayload = {
+      name,
+      email,
+      phone,
+      password_hash: hash,
+      salt,
+      email_verified: false
+    };
+
+    let { data: newUser, error: insertError } = await supabase
       .from('users')
-      .insert([
-        {
-          name,
-          email,
-          phone,
-          password_hash: hash,
-          salt,
-          email_verified: false
-        }
-      ])
-      .select('id, name, email, phone, email_verified, created_at')
+      .insert([userPayload])
+      .select('id, name, email, phone, created_at')
       .single();
+
+    // If Supabase table was created without email_verified, retry without that column
+    if (insertError && (insertError.message || '').includes('email_verified')) {
+      delete userPayload.email_verified;
+      const retry = await supabase
+        .from('users')
+        .insert([userPayload])
+        .select('id, name, email, phone, created_at')
+        .single();
+      newUser = retry.data;
+      insertError = retry.error;
+    }
 
     if (insertError) {
       console.error('Error creating user:', insertError);
