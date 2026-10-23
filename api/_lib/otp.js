@@ -1,6 +1,7 @@
 'use strict';
 
 const { getSupabase } = require('./supabase');
+const { sendOtpEmail } = require('./mailer');
 
 const OTP_TTL_MINUTES = Number(process.env.OTP_TTL_MINUTES) || 10;
 
@@ -77,11 +78,25 @@ async function sendOtp(email, purpose = 'verification') {
     consumed: false
   });
 
+  // Send email if SMTP / Gmail credentials are configured
+  let mailResult = { sent: false, simulated: true };
+  try {
+    mailResult = await sendOtpEmail({
+      to: normEmail,
+      code,
+      purpose,
+      expiresMinutes: OTP_TTL_MINUTES
+    });
+  } catch (mailErr) {
+    console.error('Mail dispatch error:', mailErr.message);
+  }
+
   return {
     ok: true,
     email: normEmail,
     expiresAt,
-    code // Exposed for inspection/testing
+    code, // Exposed for inspection/testing
+    mailSent: mailResult.sent
   };
 }
 
