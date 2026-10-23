@@ -279,8 +279,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
       try {
         var res = await window.MyShelterAuth.login(email, password);
-        if (res.ok && res.token) {
-          // Confirm token is stored in localStorage before redirecting
+        if (res.requireOtp) {
+          // Email and password verified; prompt for OTP before granting access
+          openOtpModal(
+            email,
+            'Verify OTP to Sign In',
+            'Credentials verified. We sent a 6-digit OTP code to ' + email + '. Enter the code to access your account.',
+            function (verifyRes) {
+              if (verifyRes.ok && (verifyRes.token || window.MyShelterAuth.getToken())) {
+                window.MyShelterUI.toast('Welcome back, ' + ((verifyRes.user && verifyRes.user.name) ? verifyRes.user.name.split(' ')[0] : 'User') + '!', 'success');
+                setTimeout(function () { window.location.replace('index.html'); }, 200);
+              }
+            }
+          );
+        } else if (res.ok && res.token) {
           var storedToken = window.MyShelterAuth.getToken();
           if (!storedToken || typeof storedToken !== 'string' || storedToken.trim().length === 0) {
             loginPassErr.textContent = 'Session could not be saved. Please try again.';
@@ -288,10 +300,6 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           window.MyShelterUI.toast('Welcome back, ' + ((res.user && res.user.name) ? res.user.name.split(' ')[0] : 'User') + '!', 'success');
           setTimeout(function () { window.location.replace('index.html'); }, 200);
-        } else if (res.code === 'EMAIL_NOT_VERIFIED' || res.status === 403) {
-          // Option B: Route to OTP verification UI without dead-ending or ping-ponging
-          loginPassErr.textContent = 'Email verification required. Please verify your email.';
-          openOtpModal(email, 'Email Verification Required', 'Please enter the 6-digit code sent to your email to verify your account and sign in.');
         } else {
           var err = res.error || (res.errors && (res.errors.email || res.errors.password)) || 'Sign in failed.';
           if (res.field === 'email' || /email/i.test(err)) {

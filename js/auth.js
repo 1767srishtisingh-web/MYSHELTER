@@ -132,25 +132,20 @@
       return { ok: true, user: mockUser, token: mockToken };
     },
 
-    login: async function (email, password) {
+    login: async function (email, password, otp) {
       try {
+        var payload = { email: email, password: password };
+        if (otp) payload.otp = otp;
         var res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, password: password })
+          body: JSON.stringify(payload)
         });
         var cType = res.headers.get('content-type') || '';
         if (cType.indexOf('application/json') !== -1) {
           var json = await res.json();
-          // Option B: 403 EMAIL_NOT_VERIFIED handling
-          if (res.status === 403 && (json.code === 'EMAIL_NOT_VERIFIED' || json.emailUnverified)) {
-            return {
-              ok: false,
-              status: 403,
-              code: 'EMAIL_NOT_VERIFIED',
-              error: json.error || 'Email not verified.',
-              email: email
-            };
+          if (json.requireOtp) {
+            return json;
           }
           if (json.ok && json.user && typeof json.token === 'string' && json.token.length > 0) {
             Auth.setSession(json.user, json.token);
@@ -161,16 +156,31 @@
         // Network offline or static dev server without /api
       }
       // Offline / Live Server fallback
-      var mockUser = {
-        id: 'usr_' + Date.now().toString(36),
-        name: (email.split('@')[0] || 'User').replace(/[^a-zA-Z0-9]/g, ' '),
+      if (!email || !password) {
+        return { ok: false, error: 'Please enter both email and password.' };
+      }
+      if (otp) {
+        if (otp === '842619') {
+          var mockUser = {
+            id: 'usr_' + Date.now().toString(36),
+            name: (email.split('@')[0] || 'User').replace(/[^a-zA-Z0-9]/g, ' '),
+            email: email,
+            phone: '',
+            emailVerified: true
+          };
+          var mockToken = 'mock_jwt_' + btoa(JSON.stringify({ userId: mockUser.id, email: mockUser.email }));
+          Auth.setSession(mockUser, mockToken);
+          return { ok: true, user: mockUser, token: mockToken };
+        } else {
+          return { ok: false, error: 'Invalid or expired verification code.' };
+        }
+      }
+      return {
+        ok: true,
+        requireOtp: true,
         email: email,
-        phone: '',
-        emailVerified: false
+        message: 'Password verified. An OTP has been sent to your email address.'
       };
-      var mockToken = 'mock_jwt_' + btoa(JSON.stringify({ userId: mockUser.id, email: mockUser.email }));
-      Auth.setSession(mockUser, mockToken);
-      return { ok: true, user: mockUser, token: mockToken };
     },
 
     sendOtp: async function (email, purpose) {
@@ -211,7 +221,7 @@
       } catch (e) {
         // Fallback
       }
-      if (code === '842619' || (code && code.length === 6)) {
+      if (code === '842619') {
         var u = Auth.getUser() || { email: email };
         u.emailVerified = true;
         Auth.setSession(u, Auth.getToken() || 'mock_jwt_verified');

@@ -71,6 +71,11 @@ async function sendOtp(email, purpose = 'verification') {
     expiresAt,
     consumed: false
   });
+  memoryOtpStore.set(normEmail, {
+    code,
+    expiresAt,
+    consumed: false
+  });
 
   return {
     ok: true,
@@ -102,17 +107,37 @@ async function verifyOtp(email, code, purpose = 'verification') {
 
   if (supabase) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('otp_codes')
         .select('*')
         .eq('email', normEmail)
         .eq('code', cleanCode)
-        .eq('purpose', purpose)
         .eq('consumed', false)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+
+      if (purpose) {
+        query = query.eq('purpose', purpose);
+      }
+
+      let { data, error } = await query.maybeSingle();
+
+      // If not found with specific purpose, try finding any active OTP for this email
+      if (!data && purpose) {
+        const fallbackRes = await supabase
+          .from('otp_codes')
+          .select('*')
+          .eq('email', normEmail)
+          .eq('code', cleanCode)
+          .eq('consumed', false)
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        data = fallbackRes.data;
+        error = fallbackRes.error;
+      }
 
       if (data && !error) {
         verified = true;
@@ -135,7 +160,7 @@ async function verifyOtp(email, code, purpose = 'verification') {
 
   // Check in-memory store if not verified via database
   if (!verified) {
-    const record = memoryOtpStore.get(`${normEmail}:${purpose}`);
+    const record = memoryOtpStore.get(`${normEmail}:${purpose}`) || memoryOtpStore.get(normEmail);
     if (record && !record.consumed && record.code === cleanCode) {
       if (new Date(record.expiresAt) > new Date()) {
         record.consumed = true;

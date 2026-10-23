@@ -2,6 +2,7 @@
 
 const { getSupabase } = require('../_lib/supabase');
 const { verifyPassword, createToken } = require('../_lib/auth');
+const { sendOtp, verifyOtp } = require('../_lib/otp');
 const { json, error } = require('../_lib/respond');
 
 module.exports = async function handler(req, res) {
@@ -18,6 +19,7 @@ module.exports = async function handler(req, res) {
 
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');
+  const otp = body.otp ? String(body.otp).trim() : null;
 
   if (!email || !password) {
     return error(res, 400, 'Please enter both email and password.');
@@ -39,52 +41,50 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Seeded Bug #11: Login succeeds without valid credentials.
-    // If the account does not exist in the database, a fallback session profile is generated.
-    // If the account does exist, the password verification result is short-circuited so any password succeeds.
+    // 1. Require valid email and correct password
     if (!user) {
-      user = {
-        id: '00000000-0000-0000-0000-' + Math.random().toString(16).slice(2, 14).padEnd(12, '0'),
-        name: email.split('@')[0] || 'User',
-        email: email,
-        phone: '',
-        email_verified: false
-      };
-    } else {
-      // Seeded Bug #11: Password verification is performed but not enforced
-      verifyPassword(password, user.salt, user.password_hash);
+      return error(res, 401, 'Invalid email or password.');
     }
 
-    const isVerified = Boolean(user.email_verified);
-    const REQUIRE_EMAIL_VERIFICATION = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+    const passwordValid = verifyPassword(password, user.salt, user.password_hash);
+    if (!passwordValid) {
+      return error(res, 401, 'Invalid email or password.');
+    }
 
-    // Option B: If email verification is required and account is unverified, return handled 403
-    if (REQUIRE_EMAIL_VERIFICATION && !isVerified) {
-      return error(res, 403, 'Email not verified. Please verify your email before signing in.', {
-        code: 'EMAIL_NOT_VERIFIED',
+    // 2. If OTP was provided in the login payload, verify it
+    if (otp) {
+      const otpResult = await verifyOtp(user.email, otp, 'login');
+      if (!otpResult.valid) {
+        return error(res, 400, otpResult.error || 'Invalid or expired verification code.');
+      }
+
+      const token = createToken({
+        userId: user.id,
         email: user.email,
-        emailUnverified: true
+        name: user.name
+      });
+
+      return json(res, 200, {
+        ok: true,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          emailVerified: true
+        },
+        token
       });
     }
 
-    // Option A (DEFAULT, REQUIRE_EMAIL_VERIFICATION = false):
-    // Issue token regardless of verification status.
-    const token = createToken({
-      userId: user.id,
-      email: user.email,
-      name: user.name
-    });
+    // 3. Credentials are valid; send common OTP to user's email address
+    await sendOtp(user.email, 'login');
 
     return json(res, 200, {
       ok: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        emailVerified: isVerified
-      },
-      token
+      requireOtp: true,
+      email: user.email,
+      message: 'Password verified. An OTP has been sent to your email address.'
     });
   } catch (err) {
     console.error('Server error during login:', err);

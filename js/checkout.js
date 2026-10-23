@@ -348,7 +348,7 @@
     }
 
     if (fields.checkIn && !fields.checkIn.value) {
-      fields.checkIn.min = Core.todayISO();
+      fields.checkIn.removeAttribute('min');
       fields.checkIn.value = Core.todayISO();
     }
 
