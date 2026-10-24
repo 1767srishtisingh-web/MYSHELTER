@@ -1,5 +1,6 @@
 'use strict';
 
+require('./env');
 const crypto = require('crypto');
 
 const SECRET = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || 'myshelter-auth-secret-key-2026';

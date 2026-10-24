@@ -15,7 +15,7 @@
     (function(){
       try {
         if (!localStorage.getItem('myshelter:auth_token')) {
-          window.location.replace('auth.html');
+          window.location.replace('/auth');
         }
       } catch(e){}
     })();
@@ -26,19 +26,19 @@
 
   <header class="site-header wrap">
     <nav class="nav" aria-label="Main">
-      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+      <a class="brand" href="/" aria-label="MYSHELTER home">
         <span class="brand-text">MYSHELTER</span>
       </a>
       <div class="nav-links">
-        <a class="nav-link" href="index.html">Rooms</a>
-        <a class="nav-link" href="bookings.html" aria-current="page"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+        <a class="nav-link" href="/">Rooms</a>
+        <a class="nav-link" href="/bookings" aria-current="page"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
       </div>
     </nav>
   </header>
 
   <main id="main">
     <div class="page-head wrap">
-      <p class="crumbs"><a href="index.html">Rooms</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span aria-current="page">My bookings</span></p>
+      <p class="crumbs"><a href="/">Rooms</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span aria-current="page">My bookings</span></p>
       <h1>My Bookings</h1>
       <p id="bookings-summary" aria-live="polite"></p>
     </div>
@@ -63,8 +63,8 @@
       <span>© <span data-year>2026</span> MYSHELTER</span>
       <span class="footer-note">Demo project. Tariffs are indicative and photos are representative.</span>
       <nav aria-label="Footer">
-        <a href="index.html">Rooms</a>
-        <a href="bookings.html">My bookings</a>
+        <a href="/">Rooms</a>
+        <a href="/bookings">My bookings</a>
       </nav>
     </div>
   </footer>

@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
         continueBtn.onclick = function () {
           regModal.close();
           if (window.MyShelterAuth.getToken()) {
-            window.location.replace('index.html');
+            window.location.replace('/');
           } else {
             switchTab('login');
           }
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.target === regModal) {
           regModal.close();
           if (window.MyShelterAuth.getToken()) {
-            window.location.replace('index.html');
+            window.location.replace('/');
           }
         }
       };
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function (verifyRes) {
               if (verifyRes.ok && (verifyRes.token || window.MyShelterAuth.getToken())) {
                 window.MyShelterUI.toast('Welcome back, ' + ((verifyRes.user && verifyRes.user.name) ? verifyRes.user.name.split(' ')[0] : 'User') + '!', 'success');
-                setTimeout(function () { window.location.replace('index.html'); }, 200);
+                setTimeout(function () { window.location.replace('/'); }, 200);
               }
             }
           );
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
           }
           window.MyShelterUI.toast('Welcome back, ' + ((res.user && res.user.name) ? res.user.name.split(' ')[0] : 'User') + '!', 'success');
-          setTimeout(function () { window.location.replace('index.html'); }, 200);
+          setTimeout(function () { window.location.replace('/'); }, 200);
         } else {
           var err = res.error || (res.errors && (res.errors.email || res.errors.password)) || 'Sign in failed.';
           if (res.field === 'email' || /email/i.test(err)) {

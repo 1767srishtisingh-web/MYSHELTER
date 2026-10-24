@@ -306,7 +306,7 @@
 
   function bookRoom(room) {
     if (!room) return;
-    window.location.href = 'checkout.html?room=' + encodeURIComponent(room.id);
+    window.location.href = '/checkout?room=' + encodeURIComponent(room.id);
   }
 
   els.more.addEventListener('click', function () { appendCards(PAGE_SIZE); });

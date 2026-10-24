@@ -122,8 +122,35 @@ const server = http.createServer((req, res) => {
   }
 
 
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    if (pathname === '/auth.html') {
+      res.writeHead(308, { Location: '/auth' });
+      return res.end();
+    }
+    if (pathname === '/bookings.html') {
+      res.writeHead(308, { Location: '/bookings' });
+      return res.end();
+    }
+    if (pathname === '/checkout.html') {
+      const q = urlObj.search || '';
+      res.writeHead(308, { Location: '/checkout' + q });
+      return res.end();
+    }
+    if (pathname === '/admin.html') {
+      res.writeHead(308, { Location: '/admin' });
+      return res.end();
+    }
+    if (pathname === '/index.html') {
+      res.writeHead(308, { Location: '/' });
+      return res.end();
+    }
+  }
+
   if (pathname === '/admin') pathname = '/admin.html';
   if (pathname === '/auth') pathname = '/auth.html';
+  if (pathname === '/bookings') pathname = '/bookings.html';
+  if (pathname === '/checkout') pathname = '/checkout.html';
+  if (pathname === '/index') pathname = '/index.html';
 
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return send(res, 405, 'Method not allowed', TYPES['.txt'], { Allow: 'GET, HEAD' });

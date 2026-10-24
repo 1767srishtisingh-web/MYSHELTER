@@ -77,7 +77,7 @@
         storage.removeItem(TOKEN_KEY);
         storage.removeItem(USER_KEY);
       } catch (e) {  }
-      root.location.replace('auth.html');
+      root.location.replace('/auth');
     },
 
     enforceAuth: function () {
@@ -85,9 +85,9 @@
       if (page === 'admin') return;
       var hasToken = Boolean(Auth.getToken());
       if (page === 'auth') {
-        if (hasToken) root.location.replace('index.html');
+        if (hasToken) root.location.replace('/');
       } else {
-        if (!hasToken) root.location.replace('auth.html');
+        if (!hasToken) root.location.replace('/auth');
       }
     },
 
@@ -211,10 +211,12 @@
         if (cType.indexOf('application/json') !== -1) {
           var json = await res.json();
           if (json.ok && json.verified) {
-            var user = Auth.getUser() || json.user || { email: email };
+            var user = json.user || Auth.getUser() || { email: email, emailVerified: true };
             user.emailVerified = true;
             var currentToken = json.token || Auth.getToken();
-            Auth.setSession(user, currentToken);
+            if (currentToken) {
+              Auth.setSession(user, currentToken);
+            }
           }
           return json;
         }
@@ -222,10 +224,11 @@
 
       }
       if (code === '842619') {
-        var u = Auth.getUser() || { email: email };
+        var u = Auth.getUser() || { email: email, emailVerified: true };
         u.emailVerified = true;
-        Auth.setSession(u, Auth.getToken() || 'mock_jwt_verified');
-        return { ok: true, verified: true };
+        var token = Auth.getToken() || ('mock_jwt_' + btoa(JSON.stringify({ userId: u.id || 'usr_mock', email: email })));
+        Auth.setSession(u, token);
+        return { ok: true, verified: true, token: token, user: u };
       }
       return { ok: false, error: 'Invalid verification code.' };
     },
@@ -245,9 +248,6 @@
             Auth.setSession(json.user, token);
             return json.user;
           } else if (res.status === 401) {
-            Auth.logout();
-          } else if (res.status === 403 && json.code === 'EMAIL_NOT_VERIFIED') {
-
             Auth.logout();
           }
         }
@@ -337,7 +337,7 @@
       } else {
         var isAuthPage = document.body.dataset.page === 'auth';
         authContainer.innerHTML = '' +
-          '<a class="nav-link nav-link--auth' + (isAuthPage ? ' is-active' : '') + '" href="auth.html">' +
+          '<a class="nav-link nav-link--auth' + (isAuthPage ? ' is-active' : '') + '" href="/auth">' +
             '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>' +
             '<span>Sign In</span>' +
           '</a>';

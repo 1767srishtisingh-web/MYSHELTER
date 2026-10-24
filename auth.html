@@ -15,7 +15,7 @@
     (function(){
       try {
         if (localStorage.getItem('myshelter:auth_token')) {
-          window.location.replace('index.html');
+          window.location.replace('/');
         }
       } catch(e){}
     })();
@@ -26,12 +26,12 @@
 
   <header class="site-header wrap">
     <nav class="nav" aria-label="Main">
-      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+      <a class="brand" href="/" aria-label="MYSHELTER home">
         <span class="brand-text">MYSHELTER</span>
       </a>
       <div class="nav-links">
-        <a class="nav-link" href="index.html">Rooms</a>
-        <a class="nav-link" href="bookings.html"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+        <a class="nav-link" href="/">Rooms</a>
+        <a class="nav-link" href="/bookings"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
       </div>
     </nav>
   </header>
@@ -72,8 +72,8 @@
         </div>
 
         <div class="form-actions auth-actions-center">
-          <a class="btn btn--olive" href="index.html">Explore Rooms</a>
-          <a class="btn btn--white" href="bookings.html">My Bookings</a>
+          <a class="btn btn--olive" href="/">Explore Rooms</a>
+          <a class="btn btn--white" href="/bookings">My Bookings</a>
           <button type="button" class="btn btn--danger" id="auth-page-signout">Sign Out</button>
         </div>
       </div>
@@ -223,8 +223,8 @@
       <span>© <span data-year>2026</span> MYSHELTER</span>
       <span class="footer-note">Demo project. Tariffs are indicative.</span>
       <nav aria-label="Footer">
-        <a href="index.html">Rooms</a>
-        <a href="bookings.html">My bookings</a>
+        <a href="/">Rooms</a>
+        <a href="/bookings">My bookings</a>
         <a href="admin.html">Admin</a>
       </nav>
     </div>

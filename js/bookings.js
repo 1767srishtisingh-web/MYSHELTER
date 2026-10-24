@@ -50,7 +50,7 @@
         '<span class="orb">' + I.calendar + '</span>' +
         '<h2>No bookings yet</h2>' +
         '<p>Your confirmed rooms appear here.</p>' +
-        '<div class="actions"><a class="btn btn--olive" href="index.html">Browse rooms</a></div></div>';
+        '<div class="actions"><a class="btn btn--olive" href="/">Browse rooms</a></div></div>';
     } else {
       host.innerHTML = list.map(bookingHTML).join('');
       host.querySelectorAll('img').forEach(UI.bindImageFallback);

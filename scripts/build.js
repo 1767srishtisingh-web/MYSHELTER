@@ -42,7 +42,9 @@ for (const page of PAGES) {
   for (const ref of refs) {
     if (/^(https?:|mailto:|tel:|#|data:)/.test(ref)) continue;
     const clean = ref.split(/[?#]/)[0].replace(/^\//, '') || 'index.html';
-    if (!fs.existsSync(path.join(ROOT, clean))) problems.push(`${page}: missing ${ref}`);
+    if (!fs.existsSync(path.join(ROOT, clean)) && !fs.existsSync(path.join(ROOT, clean + '.html'))) {
+      problems.push(`${page}: missing ${ref}`);
+    }
   }
 }
 

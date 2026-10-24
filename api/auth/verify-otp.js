@@ -36,9 +36,13 @@ module.exports = async function handler(req, res) {
     try {
       const { db } = await getDb();
       if (db) {
-        const dbUser = await db.collection('users').findOne({ email });
+        const usersCol = db.collection('users');
+        const dbUser = await usersCol.findOne({
+          email: { $regex: new RegExp('^' + email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') }
+        });
         if (dbUser) {
           const userId = (dbUser._id ? dbUser._id.toString() : dbUser.id) || 'usr_' + Date.now();
+          await usersCol.updateOne({ _id: dbUser._id }, { $set: { email_verified: true } });
           user = {
             id: userId,
             name: dbUser.name,
@@ -55,13 +59,30 @@ module.exports = async function handler(req, res) {
       }
     } catch (e) {}
 
+    if (!token) {
+      const fallbackUserId = (user && user.id) || 'usr_' + Date.now().toString(36);
+      const fallbackName = (user && user.name) || (email.split('@')[0] || 'User');
+      user = user || {
+        id: fallbackUserId,
+        name: fallbackName,
+        email,
+        phone: '',
+        emailVerified: true
+      };
+      token = createToken({
+        userId: fallbackUserId,
+        email: user.email,
+        name: user.name
+      });
+    }
+
     return json(res, 200, {
       ok: true,
       verified: true,
       email,
       message: 'Email successfully verified.',
-      user: user || { email, emailVerified: true },
-      token: token || null
+      user,
+      token
     });
   } catch (err) {
     console.error('Error verifying OTP:', err);

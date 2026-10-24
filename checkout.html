@@ -15,7 +15,7 @@
     (function(){
       try {
         if (!localStorage.getItem('myshelter:auth_token')) {
-          window.location.replace('auth.html');
+          window.location.replace('/auth');
         }
       } catch(e){}
     })();
@@ -26,19 +26,19 @@
 
   <header class="site-header wrap">
     <nav class="nav" aria-label="Main">
-      <a class="brand" href="index.html" aria-label="MYSHELTER home">
+      <a class="brand" href="/" aria-label="MYSHELTER home">
         <span class="brand-text">MYSHELTER</span>
       </a>
       <div class="nav-links">
-        <a class="nav-link" href="index.html">Rooms</a>
-        <a class="nav-link" href="bookings.html"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
+        <a class="nav-link" href="/">Rooms</a>
+        <a class="nav-link" href="/bookings"><span><span class="label-long">My </span>Bookings</span><span class="badge" data-booking-count hidden>0</span></a>
       </div>
     </nav>
   </header>
 
   <main id="main">
     <div class="page-head wrap">
-      <p class="crumbs"><a href="index.html">Rooms</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span aria-current="page">Checkout</span></p>
+      <p class="crumbs"><a href="/">Rooms</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span aria-current="page">Checkout</span></p>
       <h1>Confirm Your Booking</h1>
       <p>Review the room and bill, then add guest details.</p>
     </div>
@@ -49,7 +49,7 @@
         <span class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
         <h2 id="no-room-title">No room selected</h2>
         <p id="no-room-text">Choose a hotel room to review details and complete your booking.</p>
-        <div class="actions"><a class="btn btn--olive" href="index.html">Browse rooms</a></div>
+        <div class="actions"><a class="btn btn--olive" href="/">Browse rooms</a></div>
       </div>
 
 
@@ -100,7 +100,7 @@
 
           <div class="form-actions">
             <button class="btn btn--olive btn--lg" type="submit" id="continue-payment-btn">Continue to payment</button>
-            <a class="btn btn--white" href="index.html">Change room</a>
+            <a class="btn btn--white" href="/">Change room</a>
           </div>
         </form>
 
@@ -242,8 +242,8 @@
       </div>
 
       <div class="modal-actions">
-        <a class="btn btn--olive" href="bookings.html">View my bookings</a>
-        <a class="btn btn--white" href="index.html">Back to rooms</a>
+        <a class="btn btn--olive" href="/bookings">View my bookings</a>
+        <a class="btn btn--white" href="/">Back to rooms</a>
       </div>
     </div>
   </dialog>
@@ -253,8 +253,8 @@
       <span>© <span data-year>2026</span> MYSHELTER</span>
       <span class="footer-note">Demo project. Tariffs are indicative and photos are representative.</span>
       <nav aria-label="Footer">
-        <a href="index.html">Rooms</a>
-        <a href="bookings.html">My bookings</a>
+        <a href="/">Rooms</a>
+        <a href="/bookings">My bookings</a>
       </nav>
     </div>
   </footer>
