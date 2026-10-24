@@ -1,6 +1,7 @@
 'use strict';
 
 const nodemailer = require('nodemailer');
+require('./env');
 
 
 
